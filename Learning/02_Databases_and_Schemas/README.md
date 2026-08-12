@@ -1,328 +1,205 @@
 # Databases and Schemas
 
-A **database** is an organized collection of data managed by a database management system. In MySQL, databases and schemas are closely related concepts and are commonly used to organize tables, views, procedures, and other database objects.
-
 > [!NOTE]
-> **Goal:** By the end of this topic, you should be able to create, select, inspect, rename/modify where appropriate, and remove databases safely. You should also understand how databases/schemas fit into MySQL object organization and how to qualify objects with a database name.
+> This topic explains how MySQL organizes databases (schemas), how to work safely with them, how to inspect metadata, and how database-level organization is used in Data Engineering.
 
-## 1. Database vs Schema in MySQL
+## 📌 Overview
 
-In MySQL, **schema** is essentially a synonym for **database**. Both can be used to refer to a logical container for database objects.
+A **database** is a logical container for database objects such as tables, views, indexes, and stored programs. In MySQL, **database** and **schema** are synonyms.
+
+## 🎯 Learning Objectives
+
+- Explain database, schema, DBMS, and RDBMS.
+- Create, select, inspect, and drop databases safely.
+- Understand session/database scope.
+- Use fully qualified object names.
+- Perform cross-database queries.
+- Inspect metadata with `SHOW` and `INFORMATION_SCHEMA`.
+- Understand character sets and collations.
+- Apply database organization patterns in Data Engineering.
+
+---
+
+# 📚 Concepts
+
+## 1. Database, DBMS, and RDBMS
+
+A **database** is an organized collection of data. A **DBMS** manages databases. An **RDBMS** is a DBMS based on the relational model, where data is organized into related tables. MySQL is an RDBMS.
+
+```text
+Database → RDBMS → SQL
+```
+
+## 2. Database vs Schema in MySQL
+
+MySQL treats schema as a synonym for database:
 
 ```sql
 CREATE DATABASE sales_db;
 CREATE SCHEMA analytics_db;
 ```
 
-Both statements create a database/schema.
-
 > [!IMPORTANT]
-> Do not confuse the MySQL meaning of **schema** with systems where a schema is a namespace inside a database. MySQL commonly uses `database` and `schema` interchangeably.
+> Other RDBMSs may use schemas as namespaces inside a database. Answer according to the database system being discussed.
 
----
+## 3. Why Databases Are Needed
 
-## 2. Why Do We Need Databases?
-
-Databases provide logical separation for different applications, environments, or business domains.
-
-Examples:
+Databases provide logical organization and separation:
 
 ```text
-company_db
-├── employees
-├── departments
-└── payroll
-
 sales_db
 ├── customers
 ├── orders
 └── products
+
+hr_db
+├── employees
+├── departments
+└── payroll
 ```
 
-This separation improves organization, administration, security, and maintainability.
+This supports organization, administration, security, and maintainability.
 
----
-
-## 3. Create a Database
+## 4. Create a Database
 
 ```sql
-CREATE DATABASE company_db;
+CREATE DATABASE sales_db;
+CREATE DATABASE IF NOT EXISTS sales_db;
 ```
 
-This creates a database named `company_db`.
+`IF NOT EXISTS` makes repeatable setup scripts safer.
 
-### Safer version
-
-```sql
-CREATE DATABASE IF NOT EXISTS company_db;
-```
-
-`IF NOT EXISTS` prevents an error when the database already exists.
-
----
-
-## 4. Create a Schema
-
-Because MySQL treats schema as a synonym for database, this is also valid:
+## 5. Create a Schema
 
 ```sql
 CREATE SCHEMA analytics_db;
-```
-
-You can also use:
-
-```sql
 CREATE SCHEMA IF NOT EXISTS analytics_db;
 ```
 
----
+In MySQL these create databases.
 
-## 5. List Databases
+## 6. List Databases
 
 ```sql
 SHOW DATABASES;
 ```
 
-This displays databases visible to the current MySQL account.
+Visible results depend on account privileges.
 
----
-
-## 6. Select a Database
-
-Before creating or querying objects without fully qualifying their names, select the database with `USE`.
-
-```sql
-USE company_db;
-```
-
-After this, statements such as the following use `company_db` as the default database:
-
-```sql
-SELECT *
-FROM employees;
-```
-
----
-
-## 7. Find the Current Database
-
-```sql
-SELECT DATABASE();
-```
-
-If no database is currently selected, MySQL returns `NULL`.
-
----
-
-## 8. Create Tables Inside a Database
-
-After selecting a database:
-
-```sql
-USE company_db;
-
-CREATE TABLE employees (
-    employee_id INT PRIMARY KEY,
-    employee_name VARCHAR(100),
-    department VARCHAR(50)
-);
-```
-
-The table is created inside the selected database.
-
----
-
-## 9. Fully Qualified Object Names
-
-You can explicitly specify the database name:
-
-```sql
-SELECT *
-FROM company_db.employees;
-```
-
-The general pattern is:
-
-```text
-database_name.object_name
-```
-
-This is useful when working with multiple databases in the same MySQL server.
-
----
-
-## 10. Create a Table Without `USE`
-
-You can create an object by qualifying the database name:
-
-```sql
-CREATE TABLE company_db.departments (
-    department_id INT PRIMARY KEY,
-    department_name VARCHAR(100)
-);
-```
-
-This avoids depending on the current default database.
-
----
-
-## 11. Inspect Database Metadata
-
-MySQL provides commands for inspecting database objects.
-
-### Show tables in the current database
-
-```sql
-SHOW TABLES;
-```
-
-### Show tables in a specific database
-
-```sql
-SHOW TABLES FROM company_db;
-```
-
-### Describe a table
-
-```sql
-DESCRIBE company_db.employees;
-```
-
-or:
-
-```sql
-DESC company_db.employees;
-```
-
----
-
-## 12. Show Database Creation Statement
-
-```sql
-SHOW CREATE DATABASE company_db;
-```
-
-This can help inspect the database definition and default characteristics.
-
----
-
-## 13. Drop a Database
-
-```sql
-DROP DATABASE company_db;
-```
-
-This removes the database and its objects.
-
-### Safer syntax
-
-```sql
-DROP DATABASE IF EXISTS company_db;
-```
-
-> [!WARNING]
-> `DROP DATABASE` is destructive. It removes the database and objects contained within it. Never run it casually in a production environment.
-
----
-
-## 14. Database Naming Conventions
-
-Use names that are:
-
-- Clear
-- Consistent
-- Meaningful
-- Easy to type
-- Appropriate for your team's conventions
-
-Examples:
-
-```text
-sales_db
-customer_analytics
-inventory_db
-warehouse_reporting
-```
-
-Avoid unnecessarily ambiguous names such as:
-
-```text
-newdb
-abc
-final2
-sample123
-```
-
----
-
-## 15. Database Scope vs Table Scope
-
-A database contains database objects. A table contains rows and columns.
-
-```text
-MySQL Server
-│
-├── company_db
-│   ├── employees
-│   ├── departments
-│   └── payroll
-│
-└── sales_db
-    ├── customers
-    ├── orders
-    └── products
-```
-
-This hierarchy is important when working with multiple applications or data domains.
-
----
-
-## 16. Multiple Databases on One MySQL Server
-
-A MySQL server can contain multiple databases.
-
-```sql
-SHOW DATABASES;
-```
-
-You can switch between them:
+## 7. Select a Database
 
 ```sql
 USE sales_db;
 ```
 
-and later:
+This sets the default database for the current session. Therefore `SELECT * FROM orders;` resolves against `sales_db` when selected.
+
+## 8. Check the Current Database
 
 ```sql
-USE analytics_db;
+SELECT DATABASE();
 ```
 
-The current database affects unqualified object names.
+Returns the selected database or `NULL` when none is selected.
 
----
-
-## 17. Cross-Database Queries
-
-If the account has the required privileges, you can query objects in another database by qualifying the name.
+## 9. Create Objects
 
 ```sql
-SELECT
-    e.employee_name,
-    d.department_name
-FROM company_db.employees AS e
-JOIN company_db.departments AS d
-    ON e.department_id = d.department_id;
+USE sales_db;
+
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    customer_name VARCHAR(100)
+);
 ```
 
-The same database qualification can be used when objects come from different databases.
+You can also qualify the database directly:
 
----
+```sql
+CREATE TABLE sales_db.products (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(100)
+);
+```
 
-## 18. Database-Level Permissions
+## 10. Fully Qualified Names
 
-Database organization also matters for security.
+```text
+database_name.object_name
+```
 
-A user can be granted privileges on a specific database:
+Example:
+
+```sql
+SELECT * FROM sales_db.customers;
+```
+
+Qualified names remove ambiguity when multiple databases are involved.
+
+## 11. Inspect Objects
+
+```sql
+SHOW TABLES;
+SHOW TABLES FROM sales_db;
+DESCRIBE sales_db.customers;
+DESC sales_db.customers;
+```
+
+## 12. Inspect Database Definition
+
+```sql
+SHOW CREATE DATABASE sales_db;
+```
+
+Useful for inspecting database-level definition and defaults.
+
+## 13. Drop a Database
+
+```sql
+DROP DATABASE sales_db;
+DROP DATABASE IF EXISTS sales_db;
+```
+
+> [!WARNING]
+> `DROP DATABASE` removes the database and its contained objects. Treat it as a destructive production operation.
+
+## 14. Naming Conventions
+
+Prefer meaningful names such as `sales_db`, `customer_analytics`, and `finance_reporting`. Avoid ambiguous names such as `newdb`, `abc`, and `final2`.
+
+## 15. Multiple Databases on One Server
+
+```text
+MySQL Server
+├── sales_db
+├── hr_db
+├── inventory_db
+└── analytics_db
+```
+
+A session can change its default database with `USE`, while queries can explicitly reference other databases.
+
+## 16. Cross-Database Queries
+
+```sql
+SELECT *
+FROM sales_db.orders;
+```
+
+Cross-database joins are also possible:
+
+```sql
+SELECT o.order_id, c.customer_name
+FROM sales_db.orders AS o
+JOIN crm_db.customers AS c
+    ON o.customer_id = c.customer_id;
+```
+
+The account needs the required privileges.
+
+## 17. Database-Level Privileges
+
+Database boundaries can participate in access control:
 
 ```sql
 GRANT SELECT
@@ -330,15 +207,22 @@ ON sales_db.*
 TO 'report_user'@'localhost';
 ```
 
-Detailed users, roles, and access control are covered in a later topic.
+Detailed user/role management belongs to a later security topic.
 
----
+## 18. Character Sets
 
-## 19. Database Character Set and Collation
+A character set defines how characters are represented and stored.
 
-A database can have default character-set and collation settings.
+```sql
+CREATE DATABASE customer_db
+    CHARACTER SET utf8mb4;
+```
 
-For example:
+`utf8mb4` is commonly used when full Unicode support is required.
+
+## 19. Collation
+
+A collation defines how text is compared and sorted.
 
 ```sql
 CREATE DATABASE customer_db
@@ -346,16 +230,22 @@ CREATE DATABASE customer_db
     COLLATE utf8mb4_0900_ai_ci;
 ```
 
-The database defaults can influence objects created within it unless overridden at a lower level.
+```text
+Character Set → How text is represented
+Collation     → How text is compared/sorted
+```
 
-> [!TIP]
-> `utf8mb4` is the modern MySQL character set commonly used when full Unicode support is required.
+Available collations depend on the MySQL version.
 
----
+## 20. Database Defaults
 
-## 20. Inspect Database Defaults
+Database-level character-set and collation settings can act as defaults for objects created inside the database unless overridden at a lower level.
 
-You can inspect database metadata using `INFORMATION_SCHEMA`.
+## 21. `INFORMATION_SCHEMA`
+
+`INFORMATION_SCHEMA` exposes metadata about databases and objects.
+
+Useful views include `SCHEMATA`, `TABLES`, `COLUMNS`, `STATISTICS`, and `KEY_COLUMN_USAGE`.
 
 ```sql
 SELECT
@@ -365,7 +255,7 @@ SELECT
 FROM information_schema.SCHEMATA;
 ```
 
-You can filter for one database:
+## 22. Inspect One Database
 
 ```sql
 SELECT
@@ -373,370 +263,308 @@ SELECT
     DEFAULT_CHARACTER_SET_NAME,
     DEFAULT_COLLATION_NAME
 FROM information_schema.SCHEMATA
-WHERE SCHEMA_NAME = 'customer_db';
+WHERE SCHEMA_NAME = 'sales_db';
 ```
 
----
+## 23. Metadata for Data Engineering
 
-## 21. `INFORMATION_SCHEMA`
-
-`INFORMATION_SCHEMA` contains metadata about databases and database objects.
-
-Examples of useful metadata tables include:
-
-```text
-SCHEMATA
-TABLES
-COLUMNS
-STATISTICS
-KEY_COLUMN_USAGE
-```
-
-These become especially useful for database administration, automation, and Data Engineering tasks.
-
----
-
-## 22. Database vs Schema in Data Engineering
-
-In Data Engineering environments, logical separation is often important for:
-
-- Development
-- Testing
-- Production
-- Staging
-- Reporting
-- Analytics
-- Raw data
-- Curated data
-
-A simple conceptual layout could be:
-
-```text
-company_data
-├── raw
-├── staging
-├── curated
-└── reporting
-```
-
-The exact implementation depends on the database platform and architecture. MySQL commonly uses databases/schemas as logical containers.
-
----
-
-## 23. Safe Database Workflow
-
-A practical workflow is:
-
-```text
-1. Check whether the database exists
-        ↓
-2. Create it if required
-        ↓
-3. Select it with USE
-        ↓
-4. Create or inspect objects
-        ↓
-5. Verify the current database
-        ↓
-6. Perform required operations
-        ↓
-7. Drop only when intentionally required
-```
-
-Useful commands:
+Metadata queries help Data Engineers discover tables and columns, generate validation SQL, build documentation, verify expected objects, and detect structural changes.
 
 ```sql
-SHOW DATABASES;
-SELECT DATABASE();
-USE database_name;
-SHOW TABLES;
+SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = 'sales_db';
 ```
 
 ---
 
-## 24. Common Mistakes
+# 🔬 Deep Dive
 
-### Mistake 1: Querying an unselected database
+## Current Database vs Qualified Name
 
-```sql
-SELECT * FROM employees;
-```
-
-If no database is selected and the table is not qualified, MySQL may return an error.
-
-### Mistake 2: Using the wrong database
-
-Always verify:
+These can target the same object:
 
 ```sql
-SELECT DATABASE();
+USE sales_db;
+SELECT * FROM orders;
 ```
 
-### Mistake 3: Dropping the wrong database
+and:
 
-Check the exact database name before using `DROP DATABASE`.
+```sql
+SELECT * FROM sales_db.orders;
+```
 
-### Mistake 4: Assuming schema means the same thing in every RDBMS
+The second is explicit and is useful in ETL scripts, migrations, and multi-database applications.
 
-MySQL treats schema and database as synonyms, but other database systems may use schemas differently.
+## Session Scope
 
-### Mistake 5: Ignoring character set and collation requirements
+`USE` applies to the current client session. Two independent connections can have different default databases.
 
-Text storage and comparison behavior can be affected by these settings.
+## Logical vs Physical Separation
+
+A database is a logical organization boundary, not automatically a separate server or machine. Physical storage depends on configuration, storage engine, filesystem layout, and deployment architecture.
 
 ---
 
-## 25. Interview-Focused Questions
+# 🌎 Real-World Examples
 
-Try to answer each question yourself before opening the answer.
+### Application domains
+
+```text
+crm_db
+sales_db
+support_db
+```
+
+### Reporting access
+
+```sql
+GRANT SELECT
+ON reporting_db.*
+TO 'report_user'@'localhost';
+```
+
+### Metadata automation
+
+```sql
+SELECT TABLE_NAME
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = 'sales_db';
+```
+
+A pipeline can discover tables dynamically instead of maintaining fragile hard-coded lists.
+
+---
+
+# 🏗️ Data Engineering Use Cases
+
+### Environment separation
+
+```text
+sales_dev
+sales_test
+sales_prod
+```
+
+### Data-layer separation
+
+Depending on architecture:
+
+```text
+raw
+staging
+curated
+reporting
+```
+
+### Schema discovery
+
+Metadata queries can discover source structures for ingestion and validation.
+
+### Data-quality checks
+
+Pipelines can verify that expected tables and columns exist before processing.
+
+### Cross-database integration
+
+Operational and reporting workloads may reside in different logical databases and be joined when architecture and privileges permit it.
+
+---
+
+# ⚡ Performance and Operational Considerations
+
+Database selection itself is not a query optimization technique. Query performance depends on indexes, table size, predicates, join strategy, statistics, storage engine, execution plan, and network transfer.
+
+Explicit qualification mainly improves clarity. Metadata queries should retrieve only the metadata required by an automation task.
+
+---
+
+# ⚠️ Common Mistakes
+
+1. **No database selected:** unqualified references may fail.
+2. **Wrong database:** verify with `SELECT DATABASE();`.
+3. **Unsafe drop:** verify the target before `DROP DATABASE`.
+4. **Schema misconception:** MySQL uses database and schema as synonyms.
+5. **Ignoring privileges:** existence does not imply access.
+6. **Ignoring character set/collation:** text behavior can depend on them.
+7. **Hard-coded metadata:** use `INFORMATION_SCHEMA` for metadata-driven workflows.
+
+---
+
+# 🎤 Interview-Focused Questions
 
 ### Q1. What is a database?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-A database is an organized collection of data managed by a database management system. In MySQL, a database is also commonly called a schema and acts as a logical container for objects such as tables, views, and stored programs.
-
+A database is an organized collection of data managed by a DBMS. In MySQL it is also commonly called a schema and acts as a logical container for database objects.
 </details>
 
----
-
-### Q2. What is the difference between a database and a schema in MySQL?
+### Q2. Database vs schema in MySQL?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-In MySQL, **database** and **schema** are synonyms. `CREATE DATABASE` and `CREATE SCHEMA` can both be used to create a logical container for database objects.
-
-This differs from systems where a schema is a namespace inside a database.
-
+They are synonyms in MySQL. `CREATE DATABASE` and `CREATE SCHEMA` create the same kind of logical container.
 </details>
 
----
-
-### Q3. What does the `USE` statement do?
+### Q3. What does `USE database_name` do?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`USE database_name` selects the default database for the current session. After selecting it, unqualified object names such as `employees` are resolved within that database.
-
-```sql
-USE company_db;
-```
-
+It selects the default database for the current session, allowing unqualified object names to be resolved against it.
 </details>
 
----
-
-### Q4. How can you check which database is currently selected?
+### Q4. How do you check the current database?
 
 <details>
 <summary><strong>Answer</strong></summary>
-
-Use the `DATABASE()` function:
 
 ```sql
 SELECT DATABASE();
 ```
 
-It returns the name of the current default database, or `NULL` when no database is selected.
-
+It returns the selected database or `NULL`.
 </details>
 
----
-
-### Q5. How do you query a table from another database?
+### Q5. How do you query another database without changing the current database?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-Use a fully qualified object name:
-
-```sql
-SELECT *
-FROM sales_db.orders;
-```
-
-The general syntax is `database_name.object_name`.
-
+Use a qualified name such as `SELECT * FROM sales_db.orders;`.
 </details>
 
----
-
-### Q6. What is the difference between `DROP DATABASE` and `DROP TABLE`?
+### Q6. `DROP DATABASE` vs `DROP TABLE`?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`DROP DATABASE` removes the database and the objects contained within it. `DROP TABLE` removes only the specified table.
-
-Both are destructive operations, so they should be used carefully.
-
+`DROP DATABASE` removes the database and its objects. `DROP TABLE` removes only the specified table. Both are destructive.
 </details>
 
----
-
-### Q7. How can you list all databases available to your MySQL account?
+### Q7. How do you list databases?
 
 <details>
 <summary><strong>Answer</strong></summary>
-
-Use:
 
 ```sql
 SHOW DATABASES;
 ```
 
-The results depend on the databases visible to the current account's privileges.
-
+The visible results depend on account privileges.
 </details>
 
----
-
-### Q8. Why would you use `IF NOT EXISTS` when creating a database?
+### Q8. Why use `IF NOT EXISTS`?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-It makes the operation idempotent with respect to an existing database: if the database already exists, MySQL does not raise the normal "database exists" error.
-
-```sql
-CREATE DATABASE IF NOT EXISTS sales_db;
-```
-
+It prevents the normal error when the target database already exists and makes setup scripts safer to rerun.
 </details>
-
----
 
 ### Q9. What is a fully qualified table name?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-A fully qualified table name includes the database name:
-
-```sql
-SELECT *
-FROM sales_db.orders;
-```
-
-It explicitly identifies which database contains the table and is useful when multiple databases are involved.
-
+A name containing the database and object, such as `sales_db.orders`, which explicitly identifies the target database.
 </details>
 
----
-
-### Q10. What is `INFORMATION_SCHEMA` used for?
+### Q10. What is `INFORMATION_SCHEMA`?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`INFORMATION_SCHEMA` provides metadata about databases and database objects. It can be queried to inspect schemas, tables, columns, indexes, constraints, and other metadata.
-
-It is useful for administration, auditing, automation, and Data Engineering workflows.
-
+It provides metadata about databases and objects such as tables, columns, indexes, and constraints. It is useful for administration and Data Engineering automation.
 </details>
-
----
 
 ### Q11. Can two databases contain tables with the same name?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-Yes. For example, both `sales_db` and `analytics_db` can contain a table named `customers`.
+Yes. `sales_db.customers` and `crm_db.customers` can both exist because the database name distinguishes them.
+</details>
 
-They can be distinguished using fully qualified names:
+### Q12. What happens if no database is selected?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+Unqualified object references may fail because MySQL has no default database in which to resolve the object. Use `USE` or a qualified name.
+</details>
+
+### Q13. What are character set and collation?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+A character set defines how characters are represented and stored. A collation defines rules for comparing and sorting text.
+</details>
+
+### Q14. Why is `INFORMATION_SCHEMA` useful for Data Engineers?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+It enables metadata-driven workflows such as schema discovery, automated validation, documentation, SQL generation, and structural-change detection.
+</details>
+
+### Q15. How would you join `sales_db.orders` with `crm_db.customers`?
+
+<details>
+<summary><strong>Answer</strong></summary>
 
 ```sql
-SELECT * FROM sales_db.customers;
-SELECT * FROM analytics_db.customers;
+SELECT o.order_id, c.customer_name
+FROM sales_db.orders AS o
+JOIN crm_db.customers AS c
+    ON o.customer_id = c.customer_id;
 ```
-
 </details>
 
----
-
-### Q12. Why should you verify the current database before running a destructive statement?
+### Q16. Why check `SELECT DATABASE()` before a destructive operation?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-Because the current database determines the target of many unqualified object references. Checking with:
-
-```sql
-SELECT DATABASE();
-```
-
-helps prevent accidental changes to the wrong database.
-
+It verifies the session's current database and reduces the chance of operating on an unintended database through an unqualified reference.
 </details>
 
----
-
-### Q13. What are character set and collation at the database level?
+### Q17. Is a MySQL database the same as a physical server?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-A **character set** defines how text characters are represented and stored. A **collation** defines rules used for comparing and sorting text.
-
-A database can have default values that influence objects created inside it.
-
+No. A MySQL server can contain multiple logical databases. Physical storage depends on the deployment and storage configuration.
 </details>
 
 ---
 
-### Q14. How would you explain the importance of databases in a Data Engineering environment?
-
-<details>
-<summary><strong>Answer</strong></summary>
-
-Databases provide logical organization and separation for data and database objects. They can help separate domains, environments, workloads, and access boundaries.
-
-For example, an organization may logically separate raw, staging, curated, and reporting data depending on its architecture.
-
-</details>
-
----
-
-### Q15. An interviewer asks: "You have two databases, `sales_db` and `reporting_db`. How can you read `orders` from `sales_db` without changing the current database?"
-
-<details>
-<summary><strong>Answer</strong></summary>
-
-Use the fully qualified table name:
-
-```sql
-SELECT *
-FROM sales_db.orders;
-```
-
-This explicitly references `sales_db.orders` regardless of which database is currently selected with `USE`.
-
-</details>
-
----
-
-## 26. Quick Revision
+# 🔄 Quick Revision
 
 ```text
-Database / Schema → Logical container for MySQL objects
-CREATE DATABASE   → Create a database
-CREATE SCHEMA     → Create a schema (synonym in MySQL)
+Database / Schema → Synonyms in MySQL
+CREATE DATABASE   → Create database
+CREATE SCHEMA     → Create schema/database
 SHOW DATABASES    → List visible databases
-USE db_name       → Select current/default database
-DATABASE()        → Return current database
-SHOW TABLES       → List tables in current database
-DROP DATABASE     → Remove database and its objects
+USE db_name       → Select default database
+DATABASE()        → Check current database
+SHOW TABLES       → List tables
+DESC table        → Inspect structure
+DROP DATABASE     → Remove database and objects
 
 database.table    → Fully qualified object name
-
-INFORMATION_SCHEMA → Metadata about databases and objects
+INFORMATION_SCHEMA → Metadata
+CHARACTER SET      → Character representation
+COLLATION          → Comparison/sorting rules
 ```
 
-### Essential Commands
+## Essential Commands
 
 ```sql
 CREATE DATABASE IF NOT EXISTS sales_db;
@@ -752,20 +580,5 @@ DROP DATABASE IF EXISTS sales_db;
 
 ## 📂 Files in This Topic
 
-- [`examples.sql`](./examples.sql) — worked examples for databases, schemas, and metadata
+- [`examples.sql`](./examples.sql) — worked examples for databases, schemas, metadata, and cross-database references
 - [`practice.sql`](./practice.sql) — hands-on exercises and interview practice
-
-## ✅ Completion Checklist
-
-- [ ] Explain database vs schema in MySQL
-- [ ] Create a database/schema
-- [ ] List databases
-- [ ] Select a database with `USE`
-- [ ] Check the current database
-- [ ] Create and inspect tables inside a database
-- [ ] Use fully qualified object names
-- [ ] Query `INFORMATION_SCHEMA`
-- [ ] Understand database character set and collation defaults
-- [ ] Explain safe use of `DROP DATABASE`
-- [ ] Understand multiple databases on one MySQL server
-- [ ] Answer the interview questions confidently
