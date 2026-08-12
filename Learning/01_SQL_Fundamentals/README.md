@@ -44,7 +44,7 @@ SQL      → Language
 MySQL    → Database Management System that understands SQL
 ```
 
-MySQL provides the database engine, storage, query processing, transactions, indexes, security features, and other capabilities needed to manage relational data.
+MySQL provides the database engine, storage engines, query processing, transactions, indexes, security features, and other capabilities needed to manage relational data.
 
 ---
 
@@ -465,23 +465,243 @@ Understanding how a query is logically processed is more valuable than memorizin
 
 ## 21. Interview-Focused Questions
 
-You should be able to answer these confidently:
+These questions are designed in an **interview-first format**. Try to answer each question yourself before opening the answer.
 
-1. What is SQL?
-2. What is MySQL?
-3. What is the difference between SQL and MySQL?
-4. What is an RDBMS?
-5. What is the difference between a database, DBMS, and RDBMS?
-6. What are DDL, DML, DQL, DCL, and TCL?
-7. What does `SELECT` do?
-8. What does `FROM` do?
-9. What is a column alias?
-10. What is the difference between a column and a row?
-11. What is the purpose of `SELECT *`?
-12. What is the logical order of SQL query processing?
-13. Why is SQL called a declarative language?
-14. What are SQL keywords and identifiers?
-15. Is SQL case-sensitive in MySQL?
+> [!QUESTION]
+>
+> ## Q1. What is SQL, and why is it called a declarative language?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> SQL (Structured Query Language) is used to communicate with relational databases. It is called **declarative** because we specify **what result we want**, rather than describing every step required to produce that result.
+>
+> For example:
+>
+> ```sql
+> SELECT employee_name
+> FROM employees
+> WHERE salary > 50000;
+> ```
+>
+> The query specifies the required data. MySQL determines how to execute it.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q2. What is the difference between SQL and MySQL?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> **SQL is a language**, while **MySQL is an RDBMS** that implements SQL.
+>
+> SQL provides commands such as `SELECT`, `INSERT`, `UPDATE`, and `DELETE`. MySQL provides the database engine, storage, indexes, transactions, security, optimizer, and other database capabilities.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q3. What is the difference between DBMS and RDBMS?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> A **DBMS** is software used to manage databases. An **RDBMS** is a type of DBMS based on the relational model, where data is organized into tables and relationships can be established between those tables.
+>
+> MySQL is an example of an RDBMS.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q4. What are DDL, DML, DQL, DCL, and TCL?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> - **DDL** — defines database objects: `CREATE`, `ALTER`, `DROP`, `TRUNCATE`
+> - **DML** — modifies data: `INSERT`, `UPDATE`, `DELETE`
+> - **DQL** — retrieves data: `SELECT`
+> - **DCL** — controls access: `GRANT`, `REVOKE`
+> - **TCL** — controls transactions: `COMMIT`, `ROLLBACK`, `SAVEPOINT`
+>
+> Classification can vary slightly between references, so focus on both the terminology and practical purpose.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q5. What is the difference between a row and a column?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> A **row** represents one record, while a **column** represents an attribute of that record.
+>
+> For example, in an `employees` table, one employee is a row and `salary` is a column.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q6. What is the difference between `SELECT *` and selecting specific columns?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> `SELECT *` returns all columns from the selected source. Selecting specific columns returns only the required columns.
+>
+> In production queries, selecting required columns is generally preferred because it makes the query explicit, improves readability, and avoids retrieving unnecessary data.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q7. What is a column alias, and why is it used?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> A column alias gives a temporary name to a column or expression in the result set.
+>
+> ```sql
+> SELECT salary * 12 AS annual_salary
+> FROM employees;
+> ```
+>
+> Aliases improve readability and are especially useful for calculated columns and complex expressions.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q8. What is the logical order of SQL query processing?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> For a typical grouped query, the simplified logical order is:
+>
+> ```text
+> FROM
+> WHERE
+> GROUP BY
+> HAVING
+> SELECT
+> ORDER BY
+> ```
+>
+> This is different from the order in which the query is written. Understanding this is important for SQL interviews and becomes especially useful with aliases, aggregation, joins, and window functions.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q9. Why can't you normally use a SELECT alias in the WHERE clause?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> The simplified logical processing order explains this. `WHERE` is logically processed before `SELECT`, so the alias created by `SELECT` is not yet available to `WHERE`.
+>
+> For example, this pattern is problematic:
+>
+> ```sql
+> SELECT salary * 12 AS annual_salary
+> FROM employees
+> WHERE annual_salary > 600000;
+> ```
+>
+> A later topic will cover approaches such as subqueries and CTEs for filtering calculated results.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q10. Is SQL case-sensitive in MySQL?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> SQL keywords and function names are generally case-insensitive in MySQL. Identifier case sensitivity is more complicated and can depend on the object type, operating system, and MySQL configuration.
+>
+> Therefore, consistent naming conventions are important, especially when applications may move between environments.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q11. What is the difference between a keyword and an identifier in SQL?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> A **keyword** is a word recognized by SQL/MySQL, such as `SELECT` or `FROM`. An **identifier** is the name of a database object, such as a table or column.
+>
+> ```sql
+> SELECT employee_name
+> FROM employees;
+> ```
+>
+> Here, `SELECT` and `FROM` are keywords, while `employee_name` and `employees` are identifiers.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q12. What happens when you execute a SQL query?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> At a high level, MySQL parses the SQL statement, validates it, determines a suitable execution strategy, and executes that strategy against the database.
+>
+> The optimizer can consider indexes, table statistics, access paths, join strategies, and other factors. The result is then returned to the client.
+>
+> Detailed execution plans and optimization will be covered later in the repository.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q13. What is the difference between logical query processing and physical query execution?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> **Logical query processing** describes the conceptual order used to determine the result, such as `FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY`.
+>
+> **Physical execution** is how MySQL actually executes the query. The optimizer chooses an execution plan that may use indexes, scans, sorting strategies, join algorithms, and other operations.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q14. Why is understanding SQL more important than memorizing SQL syntax?
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> Interview problems rarely test syntax alone. They test whether you can translate a business requirement into a correct query, understand relationships between data, reason about filtering and aggregation, and choose an efficient approach.
+>
+> Strong SQL fundamentals make advanced topics such as joins, CTEs, window functions, and query optimization much easier to understand.
+>
+> </details>
+
+> [!QUESTION]
+>
+> ## Q15. An interviewer asks: "How would you explain SQL to a non-technical person?"
+>
+> <details>
+> <summary><strong>Answer</strong></summary>
+>
+> A simple explanation is: **SQL is a language used to ask questions about structured data and tell a database how to store or change that data.**
+>
+> For example, instead of manually searching thousands of employee records, SQL can ask the database to return all employees whose salary is above a specific amount.
+>
+> </details>
 
 ---
 
@@ -492,7 +712,7 @@ SQL       → Language used to work with relational data
 MySQL     → RDBMS that implements SQL
 Table     → Collection of related records
 Row       → One record
-Column     → Attribute of a record
+Column    → Attribute of a record
 SELECT    → Retrieve columns/expressions
 FROM      → Define the data source
 Alias     → Temporary output name
@@ -537,4 +757,5 @@ FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY
 - [ ] Understand keywords and identifiers
 - [ ] Understand MySQL case-sensitivity considerations
 - [ ] Explain logical query processing order
+- [ ] Explain logical vs physical query processing
 - [ ] Answer the interview questions above confidently
