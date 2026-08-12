@@ -449,19 +449,10 @@ Consider the valid domain, maximum range, precision requirements, nullability, e
 | `JSON` | Semi-structured JSON document |
 | `BLOB` | Binary data |
 
-## 17. Completion Checklist
+## 17. Files in This Topic
 
-- [ ] Understand MySQL data type categories
-- [ ] Understand integer types and ranges
-- [ ] Understand signed vs unsigned
-- [ ] Understand `DECIMAL` vs floating-point types
-- [ ] Understand `CHAR` vs `VARCHAR`
-- [ ] Understand text types
-- [ ] Understand date/time types
-- [ ] Understand `BOOLEAN`
-- [ ] Understand `ENUM` and `SET`
-- [ ] Understand JSON and binary types
-- [ ] Choose types based on business requirements
-- [ ] Complete `examples.sql`
-- [ ] Complete `practice.sql`
-- [ ] Explain the interview questions without memorizing them
+| File | Purpose |
+|---|---|
+| `README.md` | Concepts, explanations, and interview questions |
+| `examples.sql` | Worked SQL examples |
+| `practice.sql` | Hands-on exercises and interview practice |
