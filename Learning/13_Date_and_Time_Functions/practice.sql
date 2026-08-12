@@ -1,0 +1,74 @@
+-- ============================================================
+-- 13_Date_and_Time_Functions | Practice
+-- ============================================================
+
+-- Use the examples.sql dataset or create your own orders table.
+
+-- 01. Return the current date.
+-- 02. Return the current time.
+-- 03. Return the current date and time.
+-- 04. Display the UTC timestamp.
+-- 05. Extract the year from order_date.
+-- 06. Extract the month from order_date.
+-- 07. Extract the day from order_date.
+-- 08. Extract the hour from order_date.
+-- 09. Extract the quarter from order_date.
+-- 10. Find orders placed during January 2026.
+-- 11. Find orders placed on 2026-01-15 using a timestamp-safe range.
+-- 12. Add 30 days to every order_date.
+-- 13. Subtract 7 days from every order_date.
+-- 14. Find the number of days between order_date and shipped_at.
+-- 15. Find shipping duration in hours.
+-- 16. Find shipping duration in minutes.
+-- 17. Find orders shipped within 24 hours.
+-- 18. Find orders that took more than 2 days to ship.
+-- 19. Format order_date as YYYY-MM-DD.
+-- 20. Format order_date as YYYY-MM.
+-- 21. Format order_date as a human-readable date.
+-- 22. Convert '2026-04-15' from text to a DATE value.
+-- 23. Convert '2026-04-15 10:30:00' from text to DATETIME.
+-- 24. Group orders by calendar year.
+-- 25. Group orders by calendar month.
+-- 26. Find the first order date in the table.
+-- 27. Find the most recent order date.
+-- 28. Find orders from the last 30 days relative to NOW().
+-- 29. Find orders older than 90 days.
+-- 30. Find records whose shipping timestamp is NULL.
+-- 31. Calculate customer order tenure from first order date to today.
+-- 32. Find customers whose latest order is older than 60 days.
+-- 33. Build a month-start reporting key for each order.
+-- 34. Build a year-month reporting key using DATE_FORMAT().
+-- 35. Find orders placed during Q1 of 2026.
+-- 36. Find orders placed during business hours (09:00 through 18:00).
+-- 37. Find orders placed on weekends.
+-- 38. Find orders placed on Monday.
+-- 39. Calculate the average shipping duration in hours.
+-- 40. Calculate the maximum shipping duration in days.
+-- 41. Find orders where shipped_at occurs before order_date.
+-- 42. Find orders with a shipping duration between 1 and 3 days.
+-- 43. Create a daily order-count report.
+-- 44. Create a monthly sales report.
+-- 45. Create a quarterly sales report.
+-- 46. Identify the first order for each customer.
+-- 47. Identify the most recent order for each customer.
+-- 48. Find customers who placed an order in the current month.
+-- 49. Create an incremental-load query using a stored timestamp watermark.
+-- 50. Modify the watermark query to include a one-day lookback for late-arriving data.
+-- 51. Explain why DATE(order_date) = '2026-01-15' can be less index-friendly than a range predicate.
+-- 52. Rewrite the previous query using >= and <.
+-- 53. Find records created during a complete calendar month without using BETWEEN.
+-- 54. Calculate the age of an event in days using DATEDIFF().
+-- 55. Calculate the age of an event in hours using TIMESTAMPDIFF().
+-- 56. Create a data-quality check for future-dated orders.
+-- 57. Create a data-quality check for NULL order timestamps.
+-- 58. Create a daily reconciliation report using order_date.
+-- 59. Design a query that extracts all records since the previous successful ETL run.
+-- 60. Final challenge: build a monthly batch report showing order_count, total_sales,
+--     first_order_time, last_order_time, and average shipping duration in hours.
+
+-- Interview Practice
+-- 61. Explain DATEDIFF() vs TIMESTAMPDIFF().
+-- 62. Explain why half-open ranges are preferred for DATETIME filters.
+-- 63. Explain the difference between NOW(), CURDATE(), and UTC_TIMESTAMP().
+-- 64. Explain how functions on indexed timestamp columns can affect query performance.
+-- 65. Explain how you would design a reliable timestamp watermark for incremental ETL.
