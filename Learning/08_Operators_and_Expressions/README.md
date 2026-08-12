@@ -47,14 +47,9 @@ Here, `salary * 12` is an expression and `*` is an arithmetic operator.
 Example:
 
 ```sql
-SELECT
-    product_price,
-    quantity,
-    product_price * quantity AS line_total
+SELECT product_price, quantity, product_price * quantity AS line_total
 FROM order_items;
 ```
-
-### Division and Integer Results
 
 MySQL's `/` performs division. `DIV` performs integer division.
 
@@ -68,8 +63,6 @@ SELECT 10 / 4 AS division_result,
 
 ## 3. Comparison Operators
 
-Comparison operators evaluate relationships between values.
-
 | Operator | Meaning |
 |---|---|
 | `=` | Equal to |
@@ -79,8 +72,6 @@ Comparison operators evaluate relationships between values.
 | `>=` | Greater than or equal to |
 | `<=` | Less than or equal to |
 
-Example:
-
 ```sql
 SELECT *
 FROM employees
@@ -88,13 +79,11 @@ WHERE salary >= 50000;
 ```
 
 > [!IMPORTANT]
-> Comparisons involving `NULL` do not return `TRUE` or `FALSE`; they evaluate to `UNKNOWN`. Use `IS NULL` or `IS NOT NULL` for null checks.
+> Comparisons involving `NULL` evaluate to `UNKNOWN`. Use `IS NULL` or `IS NOT NULL` for null checks.
 
 ---
 
 ## 4. Logical Operators
-
-Logical operators combine conditions.
 
 ### AND
 
@@ -122,15 +111,13 @@ Negates a condition.
 WHERE NOT status = 'inactive'
 ```
 
-Parentheses should be used when mixing `AND` and `OR` so the intended logic is explicit.
+Use parentheses when mixing `AND` and `OR` so the intended logic is explicit.
 
 ---
 
 ## 5. Operator Precedence
 
-When multiple operators appear in an expression, MySQL follows precedence rules.
-
-For logical conditions, `AND` is evaluated before `OR`.
+`AND` has higher logical precedence than `OR`.
 
 ```sql
 WHERE department = 'Data Engineering'
@@ -138,7 +125,7 @@ WHERE department = 'Data Engineering'
   AND salary >= 60000
 ```
 
-This is interpreted as:
+is interpreted as:
 
 ```sql
 WHERE department = 'Data Engineering'
@@ -153,28 +140,22 @@ WHERE (department = 'Data Engineering'
   AND salary >= 60000
 ```
 
-**Best practice:** use parentheses whenever mixed logical operators could be misunderstood.
-
 ---
 
 ## 6. BETWEEN
 
-`BETWEEN` checks whether a value is within an inclusive range.
+`BETWEEN` is an inclusive range test.
 
 ```sql
 WHERE salary BETWEEN 50000 AND 80000
 ```
 
-This includes both boundary values.
-
-It is equivalent to:
+Equivalent to:
 
 ```sql
 WHERE salary >= 50000
   AND salary <= 80000
 ```
-
-### Date Warning
 
 For timestamps, half-open ranges are usually safer:
 
@@ -183,13 +164,11 @@ WHERE created_at >= '2026-08-01'
   AND created_at <  '2026-09-01'
 ```
 
-This avoids relying on an end-of-day timestamp.
-
 ---
 
 ## 7. IN and NOT IN
 
-`IN` tests membership in a list of values.
+`IN` tests membership in a list.
 
 ```sql
 WHERE department IN ('Data Engineering', 'Analytics', 'Finance')
@@ -202,7 +181,7 @@ WHERE status NOT IN ('cancelled', 'deleted')
 ```
 
 > [!WARNING]
-> `NOT IN` can produce surprising results when its list or subquery contains `NULL`. For nullable data, understand SQL's three-valued logic before using it.
+> `NOT IN` can produce surprising results when its list or subquery contains `NULL`. Understand SQL's three-valued logic before using it with nullable data.
 
 ---
 
@@ -214,8 +193,6 @@ WHERE status NOT IN ('cancelled', 'deleted')
 |---|---|
 | `%` | Zero or more characters |
 | `_` | Exactly one character |
-
-Examples:
 
 ```sql
 WHERE customer_name LIKE 'A%'
@@ -239,17 +216,13 @@ Names containing `data`.
 WHERE code LIKE 'A_1'
 ```
 
-A three-character value beginning with `A` and ending with `1`.
+Exactly three characters with `A` first and `1` last.
 
 ---
 
 ## 9. NULL and Three-Valued Logic
 
-SQL uses three logical states:
-
-- `TRUE`
-- `FALSE`
-- `UNKNOWN`
+SQL uses three logical states: `TRUE`, `FALSE`, and `UNKNOWN`.
 
 `NULL` means a value is missing, unknown, or not applicable. It is not equal to zero or an empty string.
 
@@ -275,9 +248,9 @@ WHERE manager_id IS NOT NULL
 
 ## 10. Bitwise Operators
 
-MySQL also supports bitwise operations such as `&`, `|`, `^`, `~`, `<<`, and `>>`.
+MySQL supports bitwise operations including `&`, `|`, `^`, `~`, `<<`, and `>>`.
 
-These are less common in everyday analytics SQL but can appear in flags, packed values, and specialized systems.
+These are less common in analytics SQL but can appear in flags and specialized systems.
 
 ```sql
 SELECT 5 & 3 AS bitwise_and,
@@ -318,7 +291,7 @@ FROM employees;
 
 If `bonus` is `NULL`, the expression is `NULL`.
 
-Use `COALESCE` when a missing value should be treated as a defined fallback:
+Use `COALESCE` when a missing value should be treated as a fallback:
 
 ```sql
 SELECT salary + COALESCE(bonus, 0) AS total_compensation
