@@ -2,48 +2,91 @@
 
 ## 📌 Overview
 
-`SELECT` and filtering are the core of SQL data retrieval. This topic develops the ability to read data precisely, filter rows using business conditions, handle `NULL`, remove duplicates, and build clear, predictable queries.
+`SELECT` and filtering are the foundation of SQL data retrieval. They teach you how to decide **what data to return**, **which rows qualify**, and **how SQL evaluates conditions**.
+
+For a Data Engineer, this is one of the most frequently used parts of SQL. ETL and ELT jobs constantly filter source data, select required columns, identify incremental changes, validate records, and prepare datasets for downstream transformations.
+
+---
 
 ## 🎯 Learning Objectives
 
 By the end of this topic, you should be able to:
 
-- Retrieve specific columns with `SELECT`
-- Use `SELECT *` appropriately
-- Filter rows with `WHERE`
-- Use comparison and logical operators
-- Work correctly with `NULL`
-- Use `DISTINCT`
-- Filter with `IN`, `BETWEEN`, and `LIKE`
-- Use `IS NULL` and `IS NOT NULL`
-- Build readable conditional expressions
-- Understand operator precedence
-- Use aliases and expressions in result sets
-- Apply filtering to realistic Data Engineering scenarios
+- Retrieve specific columns with `SELECT`.
+- Understand when `SELECT *` is useful and when to avoid it.
+- Create aliases and calculated columns.
+- Filter rows using `WHERE`.
+- Use comparison and logical operators.
+- Use `IN`, `NOT IN`, `BETWEEN`, and `LIKE`.
+- Handle `NULL` correctly.
+- Remove duplicate result rows with `DISTINCT`.
+- Understand operator precedence.
+- Filter dates and timestamps safely.
+- Understand logical query processing.
+- Write filters that can make effective use of indexes.
+- Apply filtering to Data Engineering scenarios.
 
 ---
 
-## 1. Basic SELECT
+## 🧠 1. What Does SELECT Do?
+
+`SELECT` defines the expressions that appear in the result set.
 
 ```sql
 SELECT customer_id, customer_name
 FROM customers;
 ```
 
-`SELECT` determines which expressions or columns appear in the result set.
+The query returns only the requested columns.
 
-### SELECT all columns
+You can also select expressions:
+
+```sql
+SELECT
+    customer_id,
+    customer_name,
+    salary * 12 AS annual_salary
+FROM employees;
+```
+
+The expression is calculated when the query executes; it does not automatically create a new stored column.
+
+---
+
+## 🔎 2. SELECT *
+
+`SELECT *` returns all columns from the selected table or result source.
 
 ```sql
 SELECT *
 FROM customers;
 ```
 
-`SELECT *` is useful for exploration, but explicitly naming required columns is usually better in production queries.
+It is useful when:
+
+- Exploring a table.
+- Inspecting data during development.
+- Quickly understanding a small dataset.
+
+For production ETL, reporting, and APIs, explicit columns are generally safer:
+
+```sql
+SELECT
+    customer_id,
+    customer_name,
+    city
+FROM customers;
+```
+
+### Why avoid SELECT * in production?
+
+If a source table gains a new column, a query using `*` can unexpectedly return additional data. It can also increase I/O, network transfer, and downstream schema instability.
 
 ---
 
-## 2. Column Aliases
+## 🏷️ 3. Column Aliases
+
+Aliases rename result columns without changing the table schema.
 
 ```sql
 SELECT
@@ -52,11 +95,26 @@ SELECT
 FROM customers;
 ```
 
-Aliases improve readability and can rename output columns without changing the underlying schema.
+Aliases are useful when:
+
+- Building reports.
+- Producing cleaner API output.
+- Naming calculated expressions.
+- Preparing a dataset for another transformation.
+
+Example:
+
+```sql
+SELECT
+    price * quantity AS line_total
+FROM order_items;
+```
 
 ---
 
-## 3. Calculated Columns
+## 🧮 4. Calculated Columns
+
+SQL expressions can calculate values directly in the `SELECT` list.
 
 ```sql
 SELECT
@@ -66,13 +124,23 @@ SELECT
 FROM products;
 ```
 
-SQL can calculate values directly in the `SELECT` list.
+Another example:
+
+```sql
+SELECT
+    revenue,
+    cost,
+    revenue - cost AS profit
+FROM daily_metrics;
+```
+
+These are **derived result columns**. They do not modify the stored table.
 
 ---
 
-## 4. WHERE Clause
+## 🔍 5. WHERE Clause
 
-`WHERE` filters rows before the final result is returned.
+`WHERE` filters rows according to a condition.
 
 ```sql
 SELECT *
@@ -80,20 +148,35 @@ FROM employees
 WHERE department_id = 10;
 ```
 
-Only rows satisfying the condition are returned.
+Only rows for department `10` qualify.
+
+A useful mental model is:
+
+```text
+Table rows
+   ↓
+WHERE condition
+   ↓
+Rows that qualify
+   ↓
+SELECT expressions
+```
+
+`WHERE` operates before grouping and aggregation in the logical query-processing model.
 
 ---
 
-## 5. Comparison Operators
+## ⚖️ 6. Comparison Operators
 
 | Operator | Meaning |
 |---|---|
-| `=` | Equal to |
-| `<>` / `!=` | Not equal to |
+| `=` | Equal |
+| `<>` | Not equal |
+| `!=` | Not equal |
 | `>` | Greater than |
 | `<` | Less than |
-| `>=` | Greater than or equal to |
-| `<=` | Less than or equal to |
+| `>=` | Greater than or equal |
+| `<=` | Less than or equal |
 
 Example:
 
@@ -103,13 +186,13 @@ FROM products
 WHERE price >= 1000;
 ```
 
+Multiple comparisons can be combined with logical operators.
+
 ---
 
-## 6. AND, OR and NOT
+## 🔗 7. AND
 
-### AND
-
-All conditions must be true.
+`AND` requires all conditions to evaluate to TRUE.
 
 ```sql
 SELECT *
@@ -118,9 +201,15 @@ WHERE department_id = 10
   AND salary >= 80000;
 ```
 
-### OR
+The employee must satisfy both conditions.
 
-At least one condition must be true.
+Use `AND` when the business requirement says **all conditions must hold**.
+
+---
+
+## 🔀 8. OR
+
+`OR` requires at least one condition to evaluate to TRUE.
 
 ```sql
 SELECT *
@@ -129,9 +218,13 @@ WHERE department_id = 10
    OR department_id = 20;
 ```
 
-### NOT
+The employee can belong to either department.
 
-Negates a condition.
+---
+
+## 🚫 9. NOT
+
+`NOT` negates a condition.
 
 ```sql
 SELECT *
@@ -139,20 +232,43 @@ FROM products
 WHERE NOT price < 500;
 ```
 
-### Use parentheses for clarity
-
-```sql
-WHERE department_id = 10
-  AND (salary >= 80000 OR job_title = 'Senior Engineer')
-```
-
-Do not rely on memory when a condition becomes complex; use parentheses to make business logic explicit.
+For complicated business rules, prefer explicit expressions and parentheses rather than making a condition difficult to read.
 
 ---
 
-## 7. IN Operator
+## 🧠 10. Operator Precedence
 
-`IN` checks whether a value belongs to a list.
+Consider:
+
+```sql
+WHERE department_id = 10
+   OR department_id = 20
+  AND salary > 80000;
+```
+
+`AND` has higher precedence than `OR`, so the condition is interpreted approximately as:
+
+```sql
+WHERE department_id = 10
+   OR (department_id = 20 AND salary > 80000);
+```
+
+If the intended business rule is different, use parentheses:
+
+```sql
+WHERE (department_id = 10 OR department_id = 20)
+  AND salary > 80000;
+```
+
+### Best practice
+
+When business logic combines `AND` and `OR`, use parentheses to make the intended logic explicit.
+
+---
+
+## 📋 11. IN Operator
+
+`IN` checks whether an expression matches one of several values.
 
 ```sql
 SELECT *
@@ -160,9 +276,19 @@ FROM employees
 WHERE department_id IN (10, 20, 30);
 ```
 
-This is usually cleaner than repeating multiple `OR` conditions.
+This is usually clearer than:
 
-### NOT IN
+```sql
+WHERE department_id = 10
+   OR department_id = 20
+   OR department_id = 30;
+```
+
+---
+
+## 🚫 12. NOT IN
+
+`NOT IN` excludes values from a list.
 
 ```sql
 SELECT *
@@ -170,13 +296,17 @@ FROM employees
 WHERE department_id NOT IN (10, 20, 30);
 ```
 
-Be careful with `NULL` values and `NOT IN`; SQL's three-valued logic can produce unexpected results.
+### Important NULL warning
+
+If the comparison expression or the `NOT IN` list contains `NULL`, SQL's three-valued logic can cause unexpected results.
+
+For anti-join logic involving nullable data, `NOT EXISTS` is often safer.
 
 ---
 
-## 8. BETWEEN
+## 📏 13. BETWEEN
 
-`BETWEEN` checks an inclusive range.
+`BETWEEN` tests an inclusive range.
 
 ```sql
 SELECT *
@@ -184,15 +314,48 @@ FROM products
 WHERE price BETWEEN 500 AND 2000;
 ```
 
-The boundaries are included.
+This includes:
 
-For dates, remember that `BETWEEN` is also inclusive, which can matter when a datetime column contains time components.
+```text
+500
+2000
+```
+
+### Equivalent logic
+
+```sql
+WHERE price >= 500
+  AND price <= 2000
+```
+
+The inclusive behavior matters when defining business ranges.
 
 ---
 
-## 9. LIKE
+## 📅 14. BETWEEN with Dates
+
+For a `DATE` column, an inclusive range can be appropriate:
+
+```sql
+WHERE order_date BETWEEN '2026-08-01' AND '2026-08-31'
+```
+
+For a `DATETIME` column, prefer a half-open interval:
+
+```sql
+WHERE created_at >= '2026-08-01'
+  AND created_at <  '2026-09-01'
+```
+
+This captures the entire month without depending on a final timestamp such as `23:59:59`.
+
+---
+
+## 🔤 15. LIKE
 
 `LIKE` performs pattern matching.
+
+Two important wildcard characters are:
 
 | Pattern | Meaning |
 |---|---|
@@ -207,7 +370,9 @@ FROM customers
 WHERE customer_name LIKE 'A%';
 ```
 
-This returns names beginning with `A`.
+This matches values beginning with `A`.
+
+Another example:
 
 ```sql
 SELECT *
@@ -215,15 +380,54 @@ FROM customers
 WHERE email LIKE '%@gmail.com';
 ```
 
-This returns values ending with `@gmail.com`.
+This matches values ending with `@gmail.com`.
 
 ---
 
-## 10. NULL
+## 🔎 16. LIKE Patterns
 
-`NULL` means the value is missing, unknown, or not applicable. It is not the same as zero or an empty string.
+### Starts with
 
-Incorrect:
+```sql
+WHERE name LIKE 'A%'
+```
+
+### Ends with
+
+```sql
+WHERE name LIKE '%son'
+```
+
+### Contains
+
+```sql
+WHERE name LIKE '%ar%'
+```
+
+### Exactly one unknown character
+
+```sql
+WHERE code LIKE 'A_1'
+```
+
+The exact case-sensitivity behavior of `LIKE` depends on the expression's character set/collation, so do not assume every MySQL environment behaves identically.
+
+---
+
+## NULL 17. Understanding NULL
+
+`NULL` means a value is missing, unknown, or not applicable.
+
+It is not:
+
+```text
+0
+''
+FALSE
+'NULL'
+```
+
+This is incorrect:
 
 ```sql
 WHERE manager_id = NULL
@@ -241,11 +445,21 @@ And:
 WHERE manager_id IS NOT NULL
 ```
 
-`NULL` requires special operators because normal comparison with `NULL` produces an unknown result.
+### Why?
+
+SQL uses three-valued logic:
+
+```text
+TRUE
+FALSE
+UNKNOWN
+```
+
+Comparing an unknown value with ordinary equality does not produce TRUE.
 
 ---
 
-## 11. DISTINCT
+## 🧮 18. DISTINCT
 
 `DISTINCT` removes duplicate result rows.
 
@@ -254,138 +468,297 @@ SELECT DISTINCT department_id
 FROM employees;
 ```
 
-For multiple columns, uniqueness is evaluated on the combination:
+With multiple expressions, uniqueness applies to the **combination**:
 
 ```sql
 SELECT DISTINCT department_id, job_title
 FROM employees;
 ```
 
-`DISTINCT` does not mean “find duplicates”; it returns unique combinations from the selected expressions.
+It is not equivalent to saying “make only the first column unique.”
 
 ---
 
-## 12. Filtering Dates
+## 🔬 19. DISTINCT Does Not Find Duplicate Records
 
-Use date literals carefully and prefer half-open ranges for datetime columns.
-
-For a `DATE` column:
+This query:
 
 ```sql
-SELECT *
-FROM orders
-WHERE order_date BETWEEN '2026-08-01' AND '2026-08-31';
+SELECT DISTINCT email
+FROM customers;
 ```
 
-For a `DATETIME` column, this pattern is safer:
+returns unique email values.
+
+To find duplicate emails, use aggregation instead:
 
 ```sql
-WHERE created_at >= '2026-08-01'
-  AND created_at <  '2026-09-01'
+SELECT
+    email,
+    COUNT(*) AS occurrence_count
+FROM customers
+WHERE email IS NOT NULL
+GROUP BY email
+HAVING COUNT(*) > 1;
 ```
 
-The second pattern includes the entire month without depending on a particular end-of-day time.
+This distinction is important in Data Quality work.
 
 ---
 
-## 13. Filtering with Expressions
+## 🧠 20. Logical Query Processing
 
-Conditions can use calculations and functions.
-
-```sql
-SELECT *
-FROM products
-WHERE price * 1.18 > 1000;
-```
-
-However, applying functions or calculations to an indexed column can sometimes prevent efficient index usage. When performance matters, inspect the execution plan and consider a sargable predicate.
-
----
-
-## 14. SELECT and WHERE Logical Processing
-
-A simplified logical order is:
+A simplified logical order for the concepts covered so far is:
 
 ```text
 FROM
   ↓
 WHERE
   ↓
+GROUP BY
+  ↓
+HAVING
+  ↓
 SELECT
+  ↓
+ORDER BY
+  ↓
+LIMIT
 ```
 
-This explains why a `SELECT` alias generally cannot be referenced in the `WHERE` clause of the same query.
+This is a **logical processing model**, not a literal description of every physical operation performed by the MySQL optimizer.
 
-```sql
-SELECT price * 1.18 AS final_price
-FROM products
-WHERE final_price > 1000; -- generally invalid
-```
-
-Instead, repeat the expression or use a derived table/CTE when appropriate.
+Understanding the logical order helps explain why a `SELECT` alias generally cannot be referenced in the same query's `WHERE` clause.
 
 ---
 
-## 15. Data Engineering Perspective
+## 🏷️ 21. Why SELECT Aliases Usually Cannot Be Used in WHERE
 
-Filtering is fundamental to ETL and ELT pipelines.
+This is generally invalid:
 
-Common examples include:
+```sql
+SELECT
+    price * 1.18 AS final_price
+FROM products
+WHERE final_price > 1000;
+```
 
-- Extracting only records modified since the previous load
-- Filtering invalid records into a quarantine dataset
-- Selecting active customers
-- Restricting source data to a business date range
-- Identifying rows with missing mandatory attributes
-- Selecting a subset of events for downstream processing
-
-Example incremental filter:
+A common solution is to use a derived table:
 
 ```sql
 SELECT *
+FROM (
+    SELECT
+        product_name,
+        price * 1.18 AS final_price
+    FROM products
+) AS p
+WHERE final_price > 1000;
+```
+
+This works because the outer query can filter the derived result.
+
+---
+
+## ⚡ 22. Sargable Filtering
+
+A predicate is often called **sargable** when it can make effective use of an index.
+
+Suppose `created_at` is indexed.
+
+Prefer:
+
+```sql
+WHERE created_at >= '2026-08-01'
+  AND created_at <  '2026-09-01'
+```
+
+over patterns that apply a function directly to the indexed column, such as:
+
+```sql
+WHERE DATE(created_at) = '2026-08-01'
+```
+
+The second form may prevent efficient use of a normal index on `created_at`.
+
+Always verify actual behavior with `EXPLAIN` rather than assuming.
+
+---
+
+## 🏗️ 23. Filtering in Data Engineering
+
+Filtering is everywhere in ETL and ELT pipelines.
+
+### Incremental extraction
+
+```sql
+SELECT
+    order_id,
+    customer_id,
+    updated_at
 FROM source_orders
 WHERE updated_at >= '2026-08-12 00:00:00'
   AND updated_at <  '2026-08-13 00:00:00';
 ```
 
-The exact incremental strategy depends on the source system, watermark design, late-arriving data, and pipeline requirements.
+### Data-quality filtering
+
+```sql
+SELECT *
+FROM staging_customers
+WHERE email IS NULL
+   OR customer_id IS NULL;
+```
+
+### Active records
+
+```sql
+SELECT *
+FROM customers
+WHERE status = 'ACTIVE';
+```
+
+### Quarantine invalid records
+
+```sql
+INSERT INTO rejected_orders
+SELECT *
+FROM staging_orders
+WHERE order_amount < 0;
+```
+
+Filtering therefore controls which records move through the pipeline.
 
 ---
 
-## 16. Common Mistakes
+## 🕒 24. Incremental Data and Watermarks
 
-- Using `= NULL` instead of `IS NULL`
-- Forgetting that `BETWEEN` is inclusive
-- Misunderstanding `%` and `_` in `LIKE`
-- Using `SELECT *` in production when only a few columns are needed
-- Forgetting parentheses in complex `AND`/`OR` conditions
-- Assuming `DISTINCT` operates on one column when multiple expressions are selected
-- Ignoring `NULL` behavior with `NOT IN`
-- Using an unsafe datetime upper bound
-- Filtering after aggregation when `WHERE` should be used before aggregation
-- Applying functions to indexed columns without considering performance
+A common pipeline pattern is to store the last successfully processed timestamp.
+
+```text
+Previous watermark
+       ↓
+Extract rows after watermark
+       ↓
+Process data
+       ↓
+Validate success
+       ↓
+Advance watermark
+```
+
+A half-open range is useful:
+
+```sql
+WHERE updated_at >= :start_watermark
+  AND updated_at <  :end_watermark
+```
+
+The correct design must account for late-arriving records, duplicate events, clock differences, and retry behavior.
 
 ---
 
-## 17. Interview-Focused Questions
+## 🌎 25. Real-World Example
 
-### Q1. What is the difference between WHERE and HAVING?
+Suppose the business asks:
+
+> Find active premium customers in Mumbai whose lifetime spend is at least ₹100,000.
+
+```sql
+SELECT
+    customer_id,
+    customer_name,
+    lifetime_spend
+FROM customers
+WHERE status = 'ACTIVE'
+  AND segment = 'PREMIUM'
+  AND city = 'Mumbai'
+  AND lifetime_spend >= 100000;
+```
+
+The important part is translating each business rule into an explicit predicate.
+
+---
+
+## ⚠️ 26. Common Mistakes
+
+### Mistake 1 — `= NULL`
+
+Use `IS NULL`.
+
+### Mistake 2 — Forgetting `BETWEEN` is inclusive
+
+Use explicit half-open ranges when the business requirement needs them.
+
+### Mistake 3 — Mixing AND and OR without parentheses
+
+Make business logic explicit.
+
+### Mistake 4 — Misusing `NOT IN` with NULL
+
+Consider `NOT EXISTS` for nullable anti-join scenarios.
+
+### Mistake 5 — Using `SELECT *` everywhere
+
+Select only the required columns in production pipelines.
+
+### Mistake 6 — Treating DISTINCT as duplicate detection
+
+Use `GROUP BY ... HAVING COUNT(*) > 1` to identify duplicates.
+
+### Mistake 7 — Applying functions to indexed columns without checking the plan
+
+This can reduce index effectiveness.
+
+### Mistake 8 — Using an unsafe datetime upper bound
+
+Prefer:
+
+```sql
+>= start
+AND < next_boundary
+```
+
+---
+
+## ⚡ 27. Performance Considerations
+
+Filtering can have a major effect on query performance.
+
+Consider:
+
+- Index columns frequently used for selective filters.
+- Use appropriate data types.
+- Avoid unnecessary `SELECT *` retrieval.
+- Prefer sargable predicates when possible.
+- Check execution plans with `EXPLAIN`.
+- Be careful with leading `%` in `LIKE` patterns because normal B-tree indexes generally cannot efficiently seek to an unknown starting position.
+- Avoid unnecessary functions on indexed columns.
+- Filter early in logical query design when appropriate, while remembering that the optimizer can transform the physical execution plan.
+
+Performance is workload-dependent; always validate with actual data and an execution plan.
+
+---
+
+## 🎤 28. Interview-Focused Questions
+
+### Q1. What is the difference between SELECT and WHERE?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`WHERE` filters rows before grouping and aggregation. `HAVING` filters groups after `GROUP BY` and is commonly used with aggregate conditions.
+`SELECT` determines which expressions appear in the result. `WHERE` determines which rows qualify for the query. In the logical processing model, filtering occurs before the final SELECT projection.
 
 </details>
 
 ---
 
-### Q2. Why can't we use = NULL in SQL?
+### Q2. Why can't we use `= NULL` in SQL?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`NULL` represents an unknown or missing value. Comparisons such as `= NULL` evaluate to `UNKNOWN`, not `TRUE`. SQL therefore provides `IS NULL` and `IS NOT NULL` for null checks.
+`NULL` represents an unknown or missing value. A comparison such as `column = NULL` evaluates to UNKNOWN rather than TRUE. SQL therefore uses `IS NULL` and `IS NOT NULL` for NULL checks.
 
 </details>
 
@@ -396,7 +769,7 @@ The exact incremental strategy depends on the source system, watermark design, l
 <details>
 <summary><strong>Answer</strong></summary>
 
-Both can express membership in a set of values. `IN` is generally shorter and clearer when comparing one expression against a list of constants. Multiple `OR` conditions can be more appropriate when each condition is different.
+Both can express membership in a set of values. `IN` is usually clearer when one expression is compared with several constants. Separate `OR` predicates are useful when each branch contains different logic.
 
 </details>
 
@@ -407,7 +780,7 @@ Both can express membership in a set of values. `IN` is generally shorter and cl
 <details>
 <summary><strong>Answer</strong></summary>
 
-Yes. `BETWEEN a AND b` includes both boundary values. This is important for numeric ranges and especially for datetime filtering.
+Yes. `BETWEEN a AND b` includes both boundary values. For datetime ranges, a half-open interval is often safer because it avoids ambiguity around the final timestamp of a period.
 
 </details>
 
@@ -418,18 +791,18 @@ Yes. `BETWEEN a AND b` includes both boundary values. This is important for nume
 <details>
 <summary><strong>Answer</strong></summary>
 
-`DISTINCT` removes duplicate result rows. `GROUP BY` forms groups and is commonly used with aggregate functions such as `COUNT`, `SUM`, and `AVG`. Some queries can produce similar results with either approach, but their purposes are different.
+`DISTINCT` removes duplicate result rows. `GROUP BY` creates groups and is commonly paired with aggregate functions. A grouped query can sometimes reproduce a distinct result, but the concepts serve different purposes.
 
 </details>
 
 ---
 
-### Q6. Why can NOT IN produce unexpected results when NULL is present?
+### Q6. Why can NOT IN produce unexpected results with NULL?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-SQL uses three-valued logic. If the `NOT IN` list contains `NULL`, comparisons can become `UNKNOWN`, causing rows that appear to qualify to be excluded. `NOT EXISTS` is often safer for anti-join logic when nullable values are involved.
+SQL uses three-valued logic. A NULL in the comparison set can make the overall predicate UNKNOWN, causing rows to be excluded. `NOT EXISTS` is often a safer anti-join pattern when nullable data is involved.
 
 </details>
 
@@ -440,63 +813,141 @@ SQL uses three-valued logic. If the `NOT IN` list contains `NULL`, comparisons c
 <details>
 <summary><strong>Answer</strong></summary>
 
-Prefer a half-open interval: `created_at >= '2026-08-01' AND created_at < '2026-09-01'`. This includes every timestamp in August and avoids problems caused by assuming a final timestamp such as `23:59:59`.
+Use a half-open range:
+
+```sql
+WHERE created_at >= '2026-08-01'
+  AND created_at <  '2026-09-01'
+```
+
+This includes every timestamp in August without depending on a final time such as `23:59:59`.
 
 </details>
 
 ---
 
-### Q8. What is the difference between % and _ in LIKE?
+### Q8. What is the difference between `%` and `_` in LIKE?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`%` matches zero or more characters, while `_` matches exactly one character. For example, `A%` matches any value beginning with A, while `A_` matches a two-character value beginning with A.
+`%` matches zero or more characters, while `_` matches exactly one character. For example, `A%` can match `A`, `Asha`, or `Arjun`, while `A_` matches a two-character value beginning with `A`.
 
 </details>
 
 ---
 
-### Q9. Why might SELECT * be discouraged in production queries?
+### Q9. Why is SELECT * usually discouraged in production pipelines?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-It can retrieve unnecessary data, increase network and processing costs, make downstream schemas less stable when columns change, and reduce clarity about which fields a pipeline actually depends on. Explicit columns are usually preferable.
+It can retrieve unnecessary columns, increase I/O and network transfer, and make downstream behavior change when the source schema changes. Explicit columns make dependencies clear and stable.
 
 </details>
 
 ---
 
-### Q10. How would you identify rows with a missing value in a column?
+### Q10. What is a sargable predicate?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-Use `IS NULL`, for example `WHERE email IS NULL`. Do not use `email = NULL` because ordinary equality comparison does not return `TRUE` for `NULL`.
+A sargable predicate is a condition that can be evaluated in a way that allows an appropriate index to be used effectively. For example, a range condition directly on an indexed datetime column is often more index-friendly than applying `DATE()` to that column.
 
 </details>
 
 ---
 
-## 18. Quick Revision
+### Q11. How would you identify duplicate emails?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+Use grouping and filter groups with more than one row:
+
+```sql
+SELECT email, COUNT(*) AS cnt
+FROM customers
+WHERE email IS NOT NULL
+GROUP BY email
+HAVING COUNT(*) > 1;
+```
+
+`DISTINCT` would only return unique values; it would not tell you how many times each value occurs.
+
+</details>
+
+---
+
+### Q12. How would you build an incremental extraction query?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+Use a reliable watermark such as `updated_at` and a clearly defined boundary:
+
+```sql
+WHERE updated_at >= :start_watermark
+  AND updated_at <  :end_watermark
+```
+
+The pipeline should also account for late-arriving data, retries, duplicate events, and how the watermark advances after successful processing.
+
+</details>
+
+---
+
+### Q13. What is the difference between filtering in WHERE and filtering after aggregation?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+`WHERE` filters individual rows before grouping. Conditions on aggregate results such as `COUNT(*) > 5` require `HAVING` after `GROUP BY`. Choosing the correct stage avoids incorrect results and unnecessary processing.
+
+</details>
+
+---
+
+### Q14. How would you filter rows where a value is either NULL or empty?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+Use an explicit condition such as:
+
+```sql
+WHERE phone IS NULL
+   OR phone = ''
+```
+
+For whitespace-only values, consider normalization such as `TRIM()` while being mindful of index and performance implications.
+
+</details>
+
+---
+
+## 🔄 29. Quick Revision
 
 | Concept | Key Point |
 |---|---|
-| `SELECT` | Chooses expressions/columns for the result |
+| `SELECT` | Chooses result expressions |
 | `WHERE` | Filters rows |
 | `DISTINCT` | Removes duplicate result rows |
-| `IN` | Checks membership in a list |
-| `BETWEEN` | Inclusive range filter |
+| `IN` | Checks membership |
+| `NOT IN` | Excludes listed values; watch NULL |
+| `BETWEEN` | Inclusive range |
 | `LIKE` | Pattern matching |
 | `%` | Zero or more characters |
-| `_` | One character |
-| `IS NULL` | Checks for `NULL` |
-| `AND` | All conditions must be true |
-| `OR` | At least one condition must be true |
+| `_` | Exactly one character |
+| `IS NULL` | Tests for NULL |
+| `AND` | All conditions must hold |
+| `OR` | At least one condition holds |
 | `NOT` | Negates a condition |
+| Sargable filter | More index-friendly predicate form |
+| Half-open range | `>= start AND < next_boundary` |
 
 ## 📂 Files in This Topic
 
-- [`examples.sql`](./examples.sql) — worked examples for SELECT and filtering
-- [`practice.sql`](./practice.sql) — hands-on exercises and interview practice
+- [`examples.sql`](./examples.sql) — worked examples for SELECT, expressions, filtering, NULL, DISTINCT, and dates
+- [`practice.sql`](./practice.sql) — hands-on exercises, Data Engineering scenarios, and interview practice
