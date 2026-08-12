@@ -341,6 +341,8 @@ The types communicate the intended domain of each attribute.
 
 ## 15. Interview-Focused Questions
 
+Try to answer each question yourself before opening the answer.
+
 ### Q1. Why are data types important in a relational database?
 
 <details>
@@ -449,10 +451,9 @@ Consider the valid domain, maximum range, precision requirements, nullability, e
 | `JSON` | Semi-structured JSON document |
 | `BLOB` | Binary data |
 
-## 17. Files in This Topic
+---
 
-| File | Purpose |
-|---|---|
-| `README.md` | Concepts, explanations, and interview questions |
-| `examples.sql` | Worked SQL examples |
-| `practice.sql` | Hands-on exercises and interview practice |
+## 📂 Files in This Topic
+
+- [`examples.sql`](./examples.sql) — worked examples for MySQL data types
+- [`practice.sql`](./practice.sql) — hands-on exercises and interview practice
