@@ -1,0 +1,71 @@
+-- 12_String_Functions/practice.sql
+-- Practice: String Functions
+
+-- Use the customers table from examples.sql.
+
+-- 01. Return every customer name in uppercase.
+-- 02. Return every email in lowercase.
+-- 03. Remove leading/trailing spaces from first_name.
+-- 04. Display first_name and last_name as one full_name.
+-- 05. Display full_name using CONCAT_WS().
+-- 06. Find the character length of each customer's email.
+-- 07. Compare LENGTH() and CHAR_LENGTH() for email values.
+-- 08. Extract the first three characters of customer_code.
+-- 09. Extract the final three characters of customer_code.
+-- 10. Extract the source-system prefix from customer_code.
+-- 11. Find the position of '@' in every email.
+-- 12. Extract the username from every email.
+-- 13. Extract the domain from every email.
+-- 14. Replace '-' in phone numbers with nothing.
+-- 15. Create a six-digit customer_id using LPAD().
+-- 16. Return the reversed customer_code.
+-- 17. Create a five-character masking string using REPEAT().
+-- 18. Find customers whose email domain is example.com.
+-- 19. Find customers whose first name contains the letter 'a'.
+-- 20. Find customers whose names start with 'P'.
+-- 21. Normalize first_name with TRIM() and LOWER().
+-- 22. Normalize email with TRIM() and LOWER().
+-- 23. Build a normalized phone number containing only digits for the supplied '-' format.
+-- 24. Return 'Unknown' when last_name is NULL.
+-- 25. Build a NULL-safe full name.
+-- 26. Create a business key using source prefix and customer_id.
+-- 27. Find emails that do not contain '@'.
+-- 28. Find customer codes whose prefix is 'MUM'.
+-- 29. Find customer codes ending in '789'.
+-- 30. Return the first five characters of each normalized email.
+-- 31. Return the last four characters of each phone number.
+-- 32. Count the characters in the trimmed first_name.
+-- 33. Find customers whose normalized email is longer than 20 characters.
+-- 34. Create a display label: 'CUSTOMER - <full_name>'.
+-- 35. Extract the middle token from a three-part hyphen-delimited identifier using SUBSTRING_INDEX().
+-- 36. Find duplicate normalized emails.
+-- 37. Count customers by normalized email domain.
+-- 38. Return source-system prefixes and the number of customers from each prefix.
+-- 39. Find customers whose normalized phone has fewer than 10 digits.
+-- 40. Build a standardized customer identifier with a zero-padded numeric suffix.
+
+-- Data Engineering scenarios
+
+-- 41. A staging table contains names with inconsistent whitespace. Return cleaned names.
+-- 42. A source system sends emails with mixed case. Produce a normalized join key.
+-- 43. A pipeline receives phone numbers with '-', spaces, and parentheses. Build a normalized value.
+-- 44. Extract source-system codes from IDs such as CRM-000123 and ERP-000456.
+-- 45. Find records whose email fails a basic '@' validation.
+-- 46. Identify duplicate customers using normalized email rather than raw email.
+-- 47. Create a reporting field combining country code and customer code.
+-- 48. Find records where trimming changes the source value.
+-- 49. Find records where lowercase normalization changes the source email.
+-- 50. Produce one standardized customer row containing cleaned name, email, phone, and business key.
+
+-- Interview challenges
+
+-- 51. Explain LENGTH() vs CHAR_LENGTH() with a multilingual example.
+-- 52. Explain why CONCAT() can return NULL and how to avoid it.
+-- 53. Explain why LOWER(email) in WHERE can affect index usage.
+-- 54. Extract the domain from an email without using a regular expression.
+-- 55. Explain why comma-separated values are usually a poor relational design.
+-- 56. Design a normalized-email strategy for a large customer table.
+-- 57. Given raw customer data, define a repeatable SQL cleaning transformation.
+-- 58. Find duplicate normalized emails while keeping the smallest customer_id.
+-- 59. Return the most common email domain.
+-- 60. Create a final standardized customer dataset suitable for loading into a dimension table.
