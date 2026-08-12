@@ -1,25 +1,47 @@
-# SQL Fundamentals
+# 01 — SQL Fundamentals
 
-SQL (Structured Query Language) is the standard language used to communicate with relational databases. This topic builds the foundation required to write, read, understand, and troubleshoot SQL queries in MySQL.
+## 📌 Overview
+
+SQL (Structured Query Language) is the foundation of relational data work. As a Data Engineer, SQL is used to inspect source systems, transform records, validate pipelines, reconcile datasets, build analytical tables, troubleshoot production issues, and communicate with relational databases.
+
+This topic builds the mental model required for the rest of this repository: what SQL is, how MySQL fits into the database ecosystem, how relational tables work, how SQL statements are structured, how expressions and aliases work, and how MySQL logically processes a query.
 
 > [!NOTE]
-> **Goal:** By the end of this topic, you should understand SQL itself, how MySQL fits into the database ecosystem, how a basic SQL statement is structured, and how MySQL logically processes a query.
+> **Goal:** After this topic, you should be able to read a basic SQL query, explain every clause, distinguish SQL from MySQL, understand relational-table terminology, and describe the simplified logical processing order of a query.
 
-## 1. What Is SQL?
+---
 
-**SQL (Structured Query Language)** is a declarative language used to work with data stored in relational databases.
+## 🎯 Learning Objectives
+
+- Explain SQL, DBMS, RDBMS, database, table, row, and column.
+- Explain the difference between SQL and MySQL.
+- Understand DDL, DML, DQL, DCL, and TCL.
+- Write basic `SELECT`, `FROM`, and `WHERE` queries.
+- Use aliases and calculated expressions.
+- Understand literals, comments, keywords, identifiers, and statement terminators.
+- Understand basic MySQL naming and case-sensitivity behavior.
+- Explain logical query processing order.
+- Understand why SQL is declarative.
+- Recognize common beginner mistakes.
+
+---
+
+# 📚 1. What Is SQL?
+
+**SQL (Structured Query Language)** is a language used to communicate with relational database systems.
 
 SQL can be used to:
 
 - Retrieve data
-- Insert new data
-- Modify existing data
+- Insert data
+- Update data
 - Delete data
-- Create and modify database objects
-- Control access to database objects
+- Create database objects
+- Modify database objects
+- Control access
 - Manage transactions
 
-SQL is **declarative**, meaning you describe **what data you want**, while the database engine determines how to execute the request.
+Example:
 
 ```sql
 SELECT employee_name, salary
@@ -27,67 +49,68 @@ FROM employees
 WHERE salary > 50000;
 ```
 
-The query describes the required result. MySQL determines the execution strategy.
+SQL is primarily **declarative**. You describe **what result you need**; the database engine determines how to produce it.
 
 ---
 
-## 2. What Is MySQL?
+# 📚 2. What Is MySQL?
 
-**MySQL** is a relational database management system (**RDBMS**) that stores data in tables and provides a SQL interface for working with that data.
+**MySQL** is a relational database management system (**RDBMS**) that implements SQL and provides the infrastructure required to store and process relational data.
 
 ```text
 SQL      → Language
-MySQL    → RDBMS that understands and implements SQL
+MySQL    → RDBMS that implements SQL
 ```
 
-MySQL provides the database engine, storage engines, query processing, transactions, indexes, security features, and other capabilities needed to manage relational data.
+MySQL also provides capabilities such as query optimization, storage engines, indexes, transactions, users, and permissions.
 
 ---
 
-## 3. SQL vs MySQL
+# 📚 3. SQL vs MySQL
 
 | SQL | MySQL |
 |---|---|
-| A query language | An RDBMS/database system |
-| Defines how we communicate with relational databases | Implements SQL and provides database functionality |
-| Used by many relational database systems | One specific database product |
-| Includes statements such as `SELECT`, `INSERT`, `UPDATE` | Provides storage engines, optimizer, indexes, transactions, users, etc. |
+| A language | An RDBMS/database system |
+| Used to communicate with relational databases | Implements SQL and provides database functionality |
+| Used by many database products | One specific database product |
+| Includes commands such as `SELECT`, `INSERT`, `UPDATE` | Provides optimizer, storage engines, indexes, transactions, security, etc. |
 
-Other relational database systems include PostgreSQL, Oracle Database, and Microsoft SQL Server. They all use SQL, but their syntax and features can differ.
+Other RDBMS products include PostgreSQL, Oracle Database, and Microsoft SQL Server.
+
+> [!IMPORTANT]
+> SQL concepts transfer between database systems, but exact syntax and features can differ. This repository focuses on **MySQL**.
 
 ---
 
-## 4. DBMS, RDBMS, and Database
+# 📚 4. Database, DBMS, and RDBMS
 
 ### Database
 
-A **database** is an organized collection of data.
+An organized collection of data.
 
 ### DBMS
 
-A **Database Management System (DBMS)** is software used to create, store, manage, retrieve, and control data in databases.
+A **Database Management System** is software used to create, store, retrieve, modify, and control data.
 
 ### RDBMS
 
-A **Relational Database Management System (RDBMS)** stores data using related tables and follows the relational model.
-
-MySQL is an RDBMS.
+A **Relational Database Management System** stores data using the relational model, commonly represented by related tables.
 
 ```text
 Database
    ↓
-Managed by
+Managed by DBMS / RDBMS
    ↓
-DBMS / RDBMS
-   ↓
-SQL used to communicate with it
+SQL used to communicate
 ```
+
+MySQL is an RDBMS.
 
 ---
 
-## 5. Relational Database Concepts
+# 📚 5. Relational Database Concepts
 
-A relational database organizes data into **tables**.
+A relational database organizes data into tables.
 
 | employee_id | employee_name | department | salary |
 |---:|---|---|---:|
@@ -97,42 +120,42 @@ A relational database organizes data into **tables**.
 
 ### Table
 
-A table stores related records.
+A collection of related records.
 
 ### Row
 
-A row represents one record.
+One record in a table.
 
 ### Column
 
-A column represents an attribute of the data.
+An attribute describing a record.
 
 ### Value
 
-A value is the actual piece of data stored at the intersection of a row and column.
+The actual data stored at a row/column intersection.
+
+These terms become essential when we learn keys, joins, normalization, indexes, and data modeling.
 
 ---
 
-## 6. SQL Command Categories
+# 📚 6. SQL Command Categories
 
-SQL statements are commonly grouped into these categories.
-
-| Category | Meaning | Examples |
+| Category | Purpose | Examples |
 |---|---|---|
-| DDL | Data Definition Language | `CREATE`, `ALTER`, `DROP`, `TRUNCATE` |
-| DML | Data Manipulation Language | `INSERT`, `UPDATE`, `DELETE` |
-| DQL | Data Query Language | `SELECT` |
-| DCL | Data Control Language | `GRANT`, `REVOKE` |
-| TCL | Transaction Control Language | `COMMIT`, `ROLLBACK`, `SAVEPOINT` |
+| DDL | Define database objects | `CREATE`, `ALTER`, `DROP`, `TRUNCATE` |
+| DML | Modify table data | `INSERT`, `UPDATE`, `DELETE` |
+| DQL | Retrieve data | `SELECT` |
+| DCL | Control permissions | `GRANT`, `REVOKE` |
+| TCL | Control transactions | `COMMIT`, `ROLLBACK`, `SAVEPOINT` |
 
-> [!IMPORTANT]
-> Different references sometimes classify `SELECT` differently or group SQL commands differently. For interviews, know both the terminology and the practical purpose of each command.
+> [!NOTE]
+> Classification varies slightly across references. For interviews, know both the terminology and the practical purpose of each group.
 
 ---
 
-## 7. Basic SQL Statement Structure
+# 📚 7. Basic SQL Query Structure
 
-A basic query commonly follows this structure:
+The basic retrieval pattern is:
 
 ```sql
 SELECT column1, column2
@@ -148,36 +171,44 @@ FROM employees
 WHERE salary > 50000;
 ```
 
-- `SELECT` → specifies the columns or expressions to return
-- `FROM` → specifies the source table or tables
-- `WHERE` → filters rows based on a condition
+- `SELECT` → columns or expressions to return
+- `FROM` → source of the data
+- `WHERE` → row-level filtering condition
+
+This pattern will be extended throughout the repository with joins, grouping, subqueries, CTEs, and window functions.
 
 ---
 
-## 8. SELECT
+# 📚 8. SELECT
 
-`SELECT` is used to retrieve data.
+`SELECT` retrieves data.
 
-### Select specific columns
+### Specific columns
 
 ```sql
 SELECT employee_id, employee_name
 FROM employees;
 ```
 
-### Select all columns
+### All columns
 
 ```sql
 SELECT *
 FROM employees;
 ```
 
-> [!TIP]
-> `SELECT *` is useful while exploring a table, but explicitly selecting required columns is usually preferable in production queries because it improves readability and avoids unnecessary data retrieval.
+`SELECT *` is useful while exploring a table, but production queries should generally select only required columns.
+
+Benefits of explicit columns:
+
+- Clear intent
+- Less unnecessary data transfer
+- Easier review
+- Safer downstream dependencies
 
 ---
 
-## 9. FROM
+# 📚 9. FROM
 
 `FROM` identifies the data source.
 
@@ -186,13 +217,42 @@ SELECT employee_name
 FROM employees;
 ```
 
-The source can later become more complex, including joins, subqueries, CTEs, and derived tables.
+Later, a `FROM` clause can involve joins, subqueries, CTEs, views, and derived tables.
+
+For Data Engineering, always ask:
+
+> **What is the grain of this source?**
+
+For example, an `orders` table may contain one row per order, while `order_items` contains one row per order-product combination. This difference becomes critical when joins are introduced.
 
 ---
 
-## 10. Column Aliases
+# 📚 10. WHERE
 
-An alias gives a temporary name to a column or expression in the query result.
+`WHERE` filters rows before grouping and aggregation.
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE salary > 50000;
+```
+
+Multiple conditions can be combined:
+
+```sql
+SELECT employee_name, salary
+FROM employees
+WHERE department = 'Data'
+  AND salary > 50000;
+```
+
+We will study filtering operators in detail in the next topics.
+
+---
+
+# 📚 11. Column Aliases
+
+An alias gives a temporary name to an output column or expression.
 
 ```sql
 SELECT
@@ -201,98 +261,115 @@ SELECT
 FROM employees;
 ```
 
-`AS` is commonly used, although MySQL also permits omission of `AS` in many alias expressions.
+The alias changes the displayed result name; it does **not** rename the underlying table column.
+
+Aliases are particularly useful for calculated values and readable reporting output.
 
 ---
 
-## 11. Expressions and Calculated Columns
+# 📚 12. Expressions and Calculated Columns
 
-SQL can perform calculations directly inside a query.
+SQL can calculate values while producing a result.
 
 ```sql
 SELECT
     employee_name,
     salary,
-    salary * 12 AS annual_salary
+    salary * 12 AS annual_salary,
+    salary + 5000 AS adjusted_salary
 FROM employees;
 ```
 
-Common arithmetic operators include:
+Common arithmetic operators:
 
-```text
-+   Addition
--   Subtraction
-*   Multiplication
-/   Division
-%   Modulo
-```
+| Operator | Meaning |
+|---|---|
+| `+` | Addition |
+| `-` | Subtraction |
+| `*` | Multiplication |
+| `/` | Division |
+| `%` | Modulo/remainder |
+
+Expressions are heavily used in transformation logic and feature engineering.
 
 ---
 
-## 12. Literals
+# 📚 13. Literals
 
-A literal is a fixed value written directly in a SQL statement.
+A literal is a fixed value written directly in SQL.
 
 ```sql
 SELECT 100 AS number_value;
-SELECT 'MySQL' AS technology;
 SELECT 99.50 AS price;
+SELECT 'MySQL' AS technology;
 ```
 
-Common literal types include numeric, string, date/time, and boolean-like values depending on context and MySQL data types.
+Common literals include numeric, string, date/time, and `NULL` values.
+
+Example:
+
+```sql
+SELECT
+    'Mumbai' AS city,
+    100000 AS salary,
+    NULL AS manager_id;
+```
 
 ---
 
-## 13. SQL Comments
+# 📚 14. SQL Comments
 
 Comments document SQL and are ignored by the SQL parser.
 
-### Single-line comment
+### Single-line
 
 ```sql
--- This is a comment
-SELECT * FROM employees;
+-- Retrieve employees
+SELECT *
+FROM employees;
 ```
 
-MySQL also supports `#` for single-line comments.
+MySQL also supports:
 
 ```sql
-# This is also a MySQL single-line comment
-SELECT * FROM employees;
+# Retrieve employees
+SELECT *
+FROM employees;
 ```
 
-### Multi-line comment
+### Multi-line
 
 ```sql
 /*
-   This is a
-   multi-line comment.
+   Retrieve employee information
+   for review.
 */
-SELECT * FROM employees;
+SELECT *
+FROM employees;
 ```
+
+Comments are useful for explaining business logic in production transformations.
 
 ---
 
-## 14. Statement Terminator
+# 📚 15. Statement Terminator
 
-A semicolon `;` is commonly used to terminate a SQL statement.
+A semicolon normally terminates a SQL statement.
 
 ```sql
 SELECT * FROM employees;
 SELECT * FROM departments;
 ```
 
-It is especially important when executing multiple statements in a script or SQL client.
+It is especially important when executing multiple statements in a SQL script.
 
 ---
 
-## 15. SQL Keywords and Identifiers
+# 📚 16. Keywords and Identifiers
 
 ### Keywords
 
-Keywords are reserved or special words recognized by SQL/MySQL.
-
-Examples:
+Keywords have special meaning in SQL/MySQL.
 
 ```text
 SELECT
@@ -307,7 +384,7 @@ DELETE
 
 ### Identifiers
 
-Identifiers are names of database objects such as databases, tables, columns, indexes, and views.
+Identifiers name database objects such as databases, tables, columns, indexes, and views.
 
 ```sql
 SELECT employee_name
@@ -318,53 +395,65 @@ Here `SELECT` and `FROM` are keywords, while `employee_name` and `employees` are
 
 ---
 
-## 16. Case Sensitivity in MySQL
+# 📚 17. Case Sensitivity in MySQL
 
-SQL keywords are conventionally written in uppercase for readability:
+SQL keywords and function names are generally case-insensitive.
 
 ```sql
-SELECT employee_name
-FROM employees;
+SELECT employee_name FROM employees;
 ```
 
-MySQL generally treats SQL keywords and function names case-insensitively. Identifier case sensitivity can depend on the object type, operating system, and MySQL configuration. Table-name behavior is particularly important when moving applications between environments.
+and
+
+```sql
+select employee_name from employees;
+```
+
+are normally equivalent.
+
+Identifier case behavior is more complicated and can depend on object type, operating system, and MySQL configuration. Table-name behavior is particularly important when moving workloads between environments.
 
 > [!WARNING]
-> Do not assume that every identifier behaves as case-insensitive everywhere. Follow consistent naming conventions and test portability when environments differ.
+> Use consistent identifier naming. Do not rely on a development environment behaving exactly like production.
 
 ---
 
-## 17. Naming Conventions
+# 📚 18. Naming Conventions
 
-Use clear, consistent names for database objects.
-
-Recommended style:
-
-```text
-snake_case
-```
-
-Examples:
+A practical convention for this repository is `snake_case`.
 
 ```text
 employee_id
-customer_orders
+customer_id
 order_date
 product_name
+created_at
 ```
 
-Good names make SQL easier to read, maintain, and review.
+Good names should be descriptive, consistent, stable, and meaningful to the business.
+
+Avoid names such as:
+
+```text
+x
+abc
+col1
+new_data
+final_final_table
+```
 
 ---
 
-## 18. Logical Query Processing Order
+# 📚 19. Logical Query Processing Order
 
-The order in which we **write** a query is not the same as the simplified logical order in which SQL processes it.
+The order in which SQL is **written** differs from the simplified logical order in which the query is evaluated.
 
 Example:
 
 ```sql
-SELECT department, COUNT(*) AS employee_count
+SELECT
+    department,
+    COUNT(*) AS employee_count
 FROM employees
 WHERE salary > 50000
 GROUP BY department
@@ -372,7 +461,7 @@ HAVING COUNT(*) >= 2
 ORDER BY employee_count DESC;
 ```
 
-Simplified logical processing order:
+Simplified logical order:
 
 ```text
 1. FROM
@@ -383,16 +472,16 @@ Simplified logical processing order:
 6. ORDER BY
 ```
 
-Later topics will add concepts such as joins, window functions, and `LIMIT` to this model.
+This mental model helps explain many interview questions involving aliases, aggregation, joins, and window functions.
 
 > [!IMPORTANT]
-> Understanding logical query processing order explains many common SQL interview questions, especially questions involving aliases, filtering aggregated results, and window functions.
+> Logical processing order is a conceptual model. It is not the same as the physical execution plan chosen by MySQL.
 
 ---
 
-## 19. SQL Is Declarative
+# 📚 20. SQL Is Declarative
 
-SQL focuses on **what** result is required rather than explicitly describing every computational step.
+In SQL, you specify **what** result you want rather than manually describing every processing step.
 
 ```sql
 SELECT employee_name
@@ -400,69 +489,171 @@ FROM employees
 WHERE salary > 50000;
 ```
 
-You specify the required result. The MySQL optimizer determines an execution strategy based on available indexes, statistics, table structure, and other factors.
+You do not tell MySQL exactly how to scan every row. The optimizer determines an execution strategy based on available information such as indexes, statistics, and table structure.
 
-This distinction becomes especially important when learning execution plans and query optimization.
+This distinction becomes important when we learn `EXPLAIN` and query optimization.
 
 ---
 
-## 20. Common Beginner Mistakes
+# 🔬 21. Logical Processing vs Physical Execution
 
-### Mistake 1: Forgetting `FROM`
+These concepts should not be confused.
+
+### Logical processing
+
+A conceptual model used to understand query meaning:
+
+```text
+FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY
+```
+
+### Physical execution
+
+The actual operations selected by MySQL.
+
+MySQL may consider:
+
+- Index access
+- Table scans
+- Filtering strategies
+- Join algorithms
+- Sorting
+- Statistics
+- Data distribution
+
+The physical plan can differ from the simplified logical order while still producing the correct result.
+
+---
+
+# 🌎 22. Real-World Example
+
+Suppose an e-commerce `orders` table contains:
+
+```text
+order_id
+customer_id
+order_date
+status
+amount
+```
+
+Business requirement:
+
+> Find completed orders above ₹10,000.
+
+SQL:
+
+```sql
+SELECT
+    order_id,
+    customer_id,
+    order_date,
+    amount
+FROM orders
+WHERE status = 'COMPLETED'
+  AND amount > 10000;
+```
+
+The same pattern can be used for reporting, ETL/ELT transformations, data-quality checks, and pipeline debugging.
+
+---
+
+# 🏗️ 23. Data Engineering Use Cases
+
+### Source inspection
+
+```sql
+SELECT *
+FROM source_orders
+LIMIT 10;
+```
+
+### Record counting
+
+```sql
+SELECT COUNT(*)
+FROM source_orders;
+```
+
+### Data-quality check
+
+```sql
+SELECT COUNT(*)
+FROM source_orders
+WHERE order_id IS NULL;
+```
+
+### Transformation
+
+```sql
+SELECT
+    order_id,
+    amount * 1.18 AS amount_with_tax
+FROM source_orders;
+```
+
+### Pipeline validation
+
+```sql
+SELECT COUNT(*)
+FROM target_orders;
+```
+
+These simple patterns form the foundation for more complex ETL/ELT logic later.
+
+---
+
+# ⚠️ 24. Common Mistakes
+
+### Mistake 1 — Confusing SQL and MySQL
+
+SQL is the language; MySQL is an RDBMS that implements SQL.
+
+### Mistake 2 — Using `SELECT *` everywhere
+
+Useful for exploration, but often too broad for production transformations.
+
+### Mistake 3 — Forgetting the source table
 
 ```sql
 SELECT employee_name;
 ```
 
-This is not a valid way to retrieve a column from a table.
+This does not retrieve a column from a table because no table source is specified.
 
-### Mistake 2: Selecting a column that does not exist
+### Mistake 4 — Referencing a non-existent column
 
 ```sql
 SELECT employee_name, age
 FROM employees;
 ```
 
-If `age` does not exist, MySQL returns an error.
+This fails if `age` is not defined.
 
-### Mistake 3: Confusing SQL and MySQL
+### Mistake 5 — Ignoring logical processing order
 
-SQL is the language; MySQL is an RDBMS that implements SQL and provides additional database functionality.
+This creates confusion around aliases, aggregation, joins, and window functions.
 
-### Mistake 4: Using `SELECT *` everywhere
+### Mistake 6 — Assuming identifier casing is identical everywhere
 
-It can make queries less explicit and may retrieve unnecessary columns.
+Environment and configuration can affect identifier behavior.
 
-### Mistake 5: Ignoring naming consistency
+### Mistake 7 — Memorizing syntax without understanding the result
 
-Inconsistent object naming makes databases harder to maintain.
-
-### Mistake 6: Memorizing syntax without understanding logical processing
-
-Understanding how a query is logically processed is more valuable than memorizing isolated statements.
+Interviewers frequently test **why** a query works, not only whether you remember syntax.
 
 ---
 
-## 21. Interview-Focused Questions
+# 🎤 25. Interview-Focused Questions
 
-These questions are designed in an **interview-first format**. Try to answer each question yourself before opening the answer.
+Try answering each question yourself before opening the answer.
 
-### Q1. What is SQL, and why is it called a declarative language?
+### Q1. What is SQL, and why is it called declarative?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-SQL is used to communicate with relational databases. It is called **declarative** because we specify **what result we want**, rather than describing every step required to produce that result.
-
-For example:
-
-```sql
-SELECT employee_name
-FROM employees
-WHERE salary > 50000;
-```
-
-The query specifies the required data. MySQL determines how to execute it.
+SQL is a language used to communicate with relational databases. It is declarative because the user specifies the required result while the database determines how to execute the request.
 
 </details>
 
@@ -473,9 +664,7 @@ The query specifies the required data. MySQL determines how to execute it.
 <details>
 <summary><strong>Answer</strong></summary>
 
-**SQL is a language**, while **MySQL is an RDBMS** that implements SQL.
-
-SQL provides commands such as `SELECT`, `INSERT`, `UPDATE`, and `DELETE`. MySQL provides the database engine, storage, indexes, transactions, security, optimizer, and other database capabilities.
+SQL is a language. MySQL is an RDBMS that implements SQL and provides database functionality such as storage, optimization, indexes, transactions, and security.
 
 </details>
 
@@ -486,9 +675,7 @@ SQL provides commands such as `SELECT`, `INSERT`, `UPDATE`, and `DELETE`. MySQL 
 <details>
 <summary><strong>Answer</strong></summary>
 
-A **DBMS** is software used to manage databases. An **RDBMS** is a type of DBMS based on the relational model, where data is organized into tables and relationships can be established between those tables.
-
-MySQL is an example of an RDBMS.
+A DBMS manages databases. An RDBMS is a DBMS based on the relational model, where data is represented as related tables. MySQL is an RDBMS.
 
 </details>
 
@@ -499,13 +686,7 @@ MySQL is an example of an RDBMS.
 <details>
 <summary><strong>Answer</strong></summary>
 
-- **DDL** — defines database objects: `CREATE`, `ALTER`, `DROP`, `TRUNCATE`
-- **DML** — modifies data: `INSERT`, `UPDATE`, `DELETE`
-- **DQL** — retrieves data: `SELECT`
-- **DCL** — controls access: `GRANT`, `REVOKE`
-- **TCL** — controls transactions: `COMMIT`, `ROLLBACK`, `SAVEPOINT`
-
-Classification can vary slightly between references, so focus on both the terminology and practical purpose.
+DDL defines objects (`CREATE`, `ALTER`, `DROP`, `TRUNCATE`), DML modifies data (`INSERT`, `UPDATE`, `DELETE`), DQL retrieves data (`SELECT`), DCL controls permissions (`GRANT`, `REVOKE`), and TCL controls transactions (`COMMIT`, `ROLLBACK`, `SAVEPOINT`).
 
 </details>
 
@@ -516,51 +697,47 @@ Classification can vary slightly between references, so focus on both the termin
 <details>
 <summary><strong>Answer</strong></summary>
 
-A **row** represents one record, while a **column** represents an attribute of that record.
-
-For example, in an `employees` table, one employee is a row and `salary` is a column.
+A row represents one record. A column represents an attribute of that record. For example, one employee is a row and `salary` is a column.
 
 </details>
 
 ---
 
-### Q6. What is the difference between `SELECT *` and selecting specific columns?
+### Q6. Why is selecting specific columns generally better than SELECT * in production?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`SELECT *` returns all columns from the selected source. Selecting specific columns returns only the required columns.
-
-In production queries, selecting required columns is generally preferred because it makes the query explicit, improves readability, and avoids retrieving unnecessary data.
+It makes the query explicit, reduces unnecessary data retrieval, improves readability, and reduces accidental dependencies on future schema changes.
 
 </details>
 
 ---
 
-### Q7. What is a column alias, and why is it used?
+### Q7. What is a column alias?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-A column alias gives a temporary name to a column or expression in the result set.
+An alias temporarily changes the name displayed for a column or expression.
 
 ```sql
 SELECT salary * 12 AS annual_salary
 FROM employees;
 ```
 
-Aliases improve readability and are especially useful for calculated columns and complex expressions.
+It does not rename the physical table column.
 
 </details>
 
 ---
 
-### Q8. What is the logical order of SQL query processing?
+### Q8. What is the simplified logical order of query processing?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-For a typical grouped query, the simplified logical order is:
+For a grouped query:
 
 ```text
 FROM
@@ -571,169 +748,114 @@ SELECT
 ORDER BY
 ```
 
-This is different from the order in which the query is written. Understanding this is important for SQL interviews and becomes especially useful with aliases, aggregation, joins, and window functions.
+This is a conceptual order used to reason about SQL behavior.
 
 </details>
 
 ---
 
-### Q9. Why can't you normally use a SELECT alias in the WHERE clause?
+### Q9. Why can a SELECT alias generally not be used in WHERE?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`WHERE` is logically processed before `SELECT`, so the alias created by `SELECT` is not yet available to `WHERE`.
-
-For example, this pattern is problematic:
-
-```sql
-SELECT salary * 12 AS annual_salary
-FROM employees
-WHERE annual_salary > 600000;
-```
-
-A later topic will cover approaches such as subqueries and CTEs for filtering calculated results.
+Because `WHERE` is logically processed before `SELECT`, so the alias created by `SELECT` is not available at the `WHERE` stage. A subquery or CTE can be used when filtering a calculated result at a later stage.
 
 </details>
 
 ---
 
-### Q10. Is SQL case-sensitive in MySQL?
+### Q10. Is MySQL case-sensitive?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-SQL keywords and function names are generally case-insensitive in MySQL. Identifier case sensitivity is more complicated and can depend on the object type, operating system, and MySQL configuration.
-
-Therefore, consistent naming conventions are important, especially when applications may move between environments.
+SQL keywords and function names are generally case-insensitive. Identifier case behavior depends on the object type, operating system, and MySQL configuration. Table-name case behavior is particularly important across environments.
 
 </details>
 
 ---
 
-### Q11. What is the difference between a keyword and an identifier in SQL?
+### Q11. What is the difference between a keyword and an identifier?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-A **keyword** is a word recognized by SQL/MySQL, such as `SELECT` or `FROM`. An **identifier** is the name of a database object, such as a table or column.
-
-```sql
-SELECT employee_name
-FROM employees;
-```
-
-Here, `SELECT` and `FROM` are keywords, while `employee_name` and `employees` are identifiers.
+A keyword has special meaning in SQL, such as `SELECT` or `FROM`. An identifier names an object, such as a table or column.
 
 </details>
 
 ---
 
-### Q12. What happens when you execute a SQL query?
+### Q12. What happens at a high level when MySQL receives a query?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-At a high level, MySQL parses the SQL statement, validates it, determines a suitable execution strategy, and executes that strategy against the database.
-
-The optimizer can consider indexes, table statistics, access paths, join strategies, and other factors. The result is then returned to the client.
-
-Detailed execution plans and optimization will be covered later in the repository.
+MySQL parses and validates the statement, determines an execution strategy, and executes it. The optimizer can consider indexes, statistics, access paths, and other factors before execution.
 
 </details>
 
 ---
 
-### Q13. What is the difference between logical query processing and physical query execution?
+### Q13. What is the difference between logical query processing and physical execution?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-**Logical query processing** describes the conceptual order used to determine the result, such as `FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY`.
-
-**Physical execution** is how MySQL actually executes the query. The optimizer chooses an execution plan that may use indexes, scans, sorting strategies, join algorithms, and other operations.
+Logical processing is the conceptual model used to understand the query. Physical execution is the actual strategy selected by MySQL. The optimizer may use an index or another access path even though the logical model starts with `FROM`.
 
 </details>
 
 ---
 
-### Q14. Why is understanding SQL more important than memorizing SQL syntax?
+### Q14. Why are SQL fundamentals important for a Data Engineer?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-Interview problems rarely test syntax alone. They test whether you can translate a business requirement into a correct query, understand relationships between data, reason about filtering and aggregation, and choose an efficient approach.
-
-Strong SQL fundamentals make advanced topics such as joins, CTEs, window functions, and query optimization much easier to understand.
+Data Engineers use SQL for extraction, transformation, validation, reconciliation, incremental processing, warehouse operations, and troubleshooting. Advanced topics such as joins, CTEs, window functions, and optimization all depend on these fundamentals.
 
 </details>
 
 ---
 
-### Q15. An interviewer asks: "How would you explain SQL to a non-technical person?"
-
-<details>
-<summary><strong>Answer</strong></summary>
-
-A simple explanation is: **SQL is a language used to ask questions about structured data and tell a database how to store or change that data.**
-
-For example, instead of manually searching thousands of employee records, SQL can ask the database to return all employees whose salary is above a specific amount.
-
-</details>
-
----
-
-## 22. Quick Revision
+## 🔄 26. Quick Revision
 
 ```text
-SQL        → Language used to work with relational data
-MySQL      → RDBMS that implements SQL
-Table      → Collection of related records
-Row        → One record
-Column     → Attribute of a record
-SELECT     → Retrieve columns/expressions
-FROM       → Define the data source
-Alias      → Temporary output name
-Expression → Calculation or value evaluated by SQL
-DDL        → Define database objects
-DML        → Modify table data
-DQL        → Retrieve data
-DCL        → Control access
-TCL        → Control transactions
+SQL       → language
+MySQL     → RDBMS
+Database  → organized collection of data
+Table     → collection of related records
+Row       → one record
+Column    → one attribute
+
+DDL → CREATE / ALTER / DROP / TRUNCATE
+DML → INSERT / UPDATE / DELETE
+DQL → SELECT
+DCL → GRANT / REVOKE
+TCL → COMMIT / ROLLBACK / SAVEPOINT
+
+Basic query:
+SELECT ...
+FROM ...
+WHERE ...
+
+Logical order:
+FROM
+WHERE
+GROUP BY
+HAVING
+SELECT
+ORDER BY
 ```
 
-### Basic Query Template
-
-```sql
-SELECT column1, column2
-FROM table_name
-WHERE condition;
-```
-
-### Logical Processing Reminder
-
-```text
-FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY
-```
+> [!TIP]
+> If you can explain every item in this revision block without memorizing the wording, you have the foundation required for the next topics.
 
 ---
 
 ## 📂 Files in This Topic
 
-- [`examples.sql`](./examples.sql) — worked examples covering the concepts above
-- [`practice.sql`](./practice.sql) — hands-on exercises for reinforcement
-
-## ✅ Completion Checklist
-
-- [ ] Understand SQL and MySQL
-- [ ] Understand DBMS and RDBMS
-- [ ] Understand tables, rows, columns, and values
-- [ ] Know SQL command categories
-- [ ] Understand `SELECT` and `FROM`
-- [ ] Write basic expressions and aliases
-- [ ] Use SQL comments correctly
-- [ ] Understand keywords and identifiers
-- [ ] Understand MySQL case-sensitivity considerations
-- [ ] Explain logical query processing order
-- [ ] Explain logical vs physical query processing
-- [ ] Answer the interview questions above confidently
+- [`examples.sql`](./examples.sql) — worked SQL fundamentals examples
+- [`practice.sql`](./practice.sql) — hands-on exercises and interview practice
