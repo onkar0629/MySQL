@@ -2,72 +2,50 @@
 
 ## 📌 Overview
 
-A table is the primary relational structure used to store rows and columns. This topic covers how to create tables, modify their structure safely, inspect definitions, and remove tables when required.
+Tables are the core storage structures of a relational database. In MySQL, `CREATE TABLE` defines the initial schema, while `ALTER TABLE` changes an existing schema as requirements evolve.
 
-The focus is on practical MySQL usage and the table-definition decisions a Data Engineer should understand.
+For a Data Engineer, table definition is more than syntax: column definitions, constraints, defaults, indexes, and nullability determine how reliably data can be loaded, validated, queried, and maintained.
 
 ## 🎯 Learning Objectives
 
 By the end of this topic, you should be able to:
 
-- Create tables with appropriate columns and data types
-- Understand the structure of `CREATE TABLE`
-- Use `IF NOT EXISTS`
-- Create tables with `PRIMARY KEY` and `NOT NULL`
-- Add, modify, rename, and drop columns
-- Add and remove table constraints
-- Rename tables
-- Inspect table definitions
-- Understand `ALTER TABLE` and its risks
-- Distinguish structural changes from data changes
-- Apply safe table-evolution practices
+- Create tables from scratch.
+- Choose appropriate columns and data types.
+- Define primary keys and constraints.
+- Add, modify, rename, and drop columns safely.
+- Add and remove constraints and indexes.
+- Use `CREATE TABLE ... LIKE` and `CREATE TABLE ... AS SELECT`.
+- Inspect table definitions before schema changes.
+- Apply schema changes safely in Data Engineering workflows.
 
----
+## 🧠 1. What Is a Table?
 
-## 1. What Is a Table?
+A table stores related records as rows and attributes as columns.
 
-A table stores data in rows and columns.
+| employee_id | employee_name | department | salary |
+|---:|---|---|---:|
+| 101 | Asha | Engineering | 90000 |
+| 102 | Rahul | Sales | 65000 |
 
-```text
-employees
-├── employee_id
-├── employee_name
-├── department
-└── salary
-```
+Each column has a data type and may have constraints that describe the valid domain.
 
-Each column has a defined data type and each row represents a record.
+A good table design answers: what does each column mean, which values are valid, which column identifies a row, can a value be missing, what defaults apply, and which relationships and indexes are required?
 
----
-
-## 2. CREATE TABLE
-
-Basic syntax:
-
-```sql
-CREATE TABLE table_name (
-    column_name data_type,
-    column_name data_type
-);
-```
-
-Example:
+## 🏗️ 2. CREATE TABLE
 
 ```sql
 CREATE TABLE employees (
     employee_id INT,
     employee_name VARCHAR(100),
+    department VARCHAR(50),
     salary DECIMAL(10, 2)
 );
 ```
 
-The table is created inside the currently selected database.
+`CREATE TABLE` defines the structure; it does not insert rows.
 
----
-
-## 3. CREATE TABLE IF NOT EXISTS
-
-Use this when the script should not fail simply because the table already exists.
+### CREATE TABLE IF NOT EXISTS
 
 ```sql
 CREATE TABLE IF NOT EXISTS employees (
@@ -76,464 +54,443 @@ CREATE TABLE IF NOT EXISTS employees (
 );
 ```
 
-This is useful in repeatable setup scripts, but it does not modify an existing table.
+This is useful for repeatable setup scripts, but it does not verify that an existing table has the schema you expected.
 
----
+## 🔑 3. Primary Keys
 
-## 4. Creating a Table with Constraints
-
-A table definition can include constraints.
+A primary key uniquely identifies each row and cannot contain `NULL`.
 
 ```sql
 CREATE TABLE employees (
     employee_id INT PRIMARY KEY,
-    employee_name VARCHAR(100) NOT NULL,
-    email VARCHAR(255) UNIQUE,
-    salary DECIMAL(10, 2)
+    employee_name VARCHAR(100)
 );
 ```
 
-Detailed constraint behavior is covered in the next topic, but understanding how constraints appear in a table definition is essential here.
-
----
-
-## 5. Column Definitions
-
-A column definition normally contains:
-
-```text
-column_name + data_type + optional attributes/constraints
-```
-
-Example:
+Composite keys are useful when the combination of columns defines uniqueness:
 
 ```sql
-employee_id INT NOT NULL
-```
-
-Common attributes include:
-
-- `NOT NULL`
-- `DEFAULT`
-- `PRIMARY KEY`
-- `UNIQUE`
-- `AUTO_INCREMENT`
-- `CHECK`
-- `REFERENCES` / foreign-key definitions
-
----
-
-## 6. AUTO_INCREMENT
-
-`AUTO_INCREMENT` can generate sequential integer values for a suitable key column.
-
-```sql
-CREATE TABLE employees (
-    employee_id INT AUTO_INCREMENT PRIMARY KEY,
-    employee_name VARCHAR(100) NOT NULL
+CREATE TABLE order_items (
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    PRIMARY KEY (order_id, product_id)
 );
 ```
 
-When a row is inserted without specifying `employee_id`, MySQL can generate the value.
+## 🚫 4. NOT NULL
 
----
-
-## 7. DEFAULT Values
-
-A column can have a default value.
+`NOT NULL` prevents missing values.
 
 ```sql
-CREATE TABLE users (
-    user_id INT PRIMARY KEY,
-    is_active BOOLEAN DEFAULT TRUE
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    customer_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255)
 );
 ```
 
-Defaults are applied when an insert does not provide a value for that column, subject to MySQL's rules and the column definition.
+Use it when the business meaning requires a value. Do not make every column `NOT NULL` automatically.
 
----
+## 🎯 5. DEFAULT Values
 
-## 8. Inspect a Table
-
-Use `DESCRIBE` or `SHOW COLUMNS` to inspect columns.
+A default is used when an insert does not provide a value.
 
 ```sql
-DESCRIBE employees;
+CREATE TABLE jobs (
+    job_id INT PRIMARY KEY,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-or:
+Defaults are useful for statuses, flags, and audit timestamps.
+
+## 🔗 6. Foreign Keys
+
+A foreign key represents a relationship between tables.
 
 ```sql
-SHOW COLUMNS FROM employees;
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    FOREIGN KEY (customer_id)
+        REFERENCES customers(customer_id)
+);
 ```
 
-To inspect the complete table definition:
+It can prevent references to nonexistent parent rows, subject to the table engine and referential-action rules. Data Engineering systems may enforce such relationships in the database or validate them through pipeline quality checks.
+
+## ✏️ 7. ALTER TABLE
+
+`ALTER TABLE` changes an existing table definition.
 
 ```sql
-SHOW CREATE TABLE employees;
+ALTER TABLE employees ADD COLUMN email VARCHAR(255);
+ALTER TABLE employees DROP COLUMN email;
+ALTER TABLE employees RENAME COLUMN employee_name TO full_name;
 ```
 
-`SHOW CREATE TABLE` is especially useful when you need to understand the exact DDL currently stored by MySQL.
+Schema changes should be tested before production deployment.
 
----
-
-## 9. ALTER TABLE
-
-`ALTER TABLE` changes the structure of an existing table.
-
-General form:
-
-```sql
-ALTER TABLE table_name ...;
-```
-
-It can be used for operations such as:
-
-- Adding columns
-- Modifying column definitions
-- Renaming columns
-- Dropping columns
-- Adding constraints
-- Removing constraints
-- Renaming tables
-
----
-
-## 10. ADD COLUMN
+## ➕ 8. ADD COLUMN
 
 ```sql
 ALTER TABLE employees
 ADD COLUMN hire_date DATE;
 ```
 
-You can control placement with `FIRST` or `AFTER` when appropriate:
+With a default:
 
 ```sql
 ALTER TABLE employees
-ADD COLUMN department VARCHAR(50) AFTER employee_name;
+ADD COLUMN status VARCHAR(20) DEFAULT 'ACTIVE';
 ```
 
-Column order generally should not be treated as a logical data-modeling requirement.
+When adding a required column to an existing populated table, plan how existing rows receive valid values.
 
----
-
-## 11. ADD Multiple Columns
-
-```sql
-ALTER TABLE employees
-ADD COLUMN phone VARCHAR(20),
-ADD COLUMN city VARCHAR(50);
-```
-
-Adding related structural changes together can make a migration easier to reason about.
-
----
-
-## 12. MODIFY COLUMN
-
-`MODIFY COLUMN` changes a column definition without changing its name.
+## 🔄 9. MODIFY COLUMN
 
 ```sql
 ALTER TABLE employees
 MODIFY COLUMN salary DECIMAL(12, 2);
 ```
 
-Be careful when narrowing a type or adding `NOT NULL`, because existing data may not satisfy the new definition.
+Changing a type can cause conversion, truncation, or rejected values. Profile existing data first.
 
----
+## 🏷️ 10. CHANGE COLUMN vs RENAME COLUMN
 
-## 13. CHANGE COLUMN
-
-`CHANGE COLUMN` can rename a column and define its new specification.
+`CHANGE COLUMN` can rename a column and requires the new definition:
 
 ```sql
 ALTER TABLE employees
 CHANGE COLUMN employee_name full_name VARCHAR(150) NOT NULL;
 ```
 
-Unlike `MODIFY COLUMN`, `CHANGE COLUMN` requires both the old and new column names.
-
----
-
-## 14. RENAME COLUMN
-
-MySQL also supports direct column renaming:
+`RENAME COLUMN` is intended for a name-only change:
 
 ```sql
 ALTER TABLE employees
 RENAME COLUMN full_name TO employee_name;
 ```
 
-Use this when only the column name needs to change and the definition should otherwise remain intact.
+Use the operation that best communicates the intended migration.
 
----
-
-## 15. DROP COLUMN
+## 🗑️ 11. DROP COLUMN
 
 ```sql
 ALTER TABLE employees
-DROP COLUMN phone;
+DROP COLUMN temporary_flag;
 ```
 
-> [!WARNING]
-> Dropping a column is destructive. The column and its stored values are removed. Confirm dependencies and backups before production changes.
+Dropping a column is destructive. Check views, ETL jobs, procedures, reports, applications, indexes, and downstream pipelines first.
 
----
+## 📋 12. Inspecting a Table
 
-## 16. Rename a Table
+Use metadata commands before changing a schema.
 
 ```sql
-RENAME TABLE employees TO staff;
+DESCRIBE employees;
+SHOW CREATE TABLE employees;
 ```
 
-You can also use:
+`SHOW CREATE TABLE` exposes the actual DDL, including columns, constraints, indexes, defaults, and table options.
+
+You can also query metadata:
 
 ```sql
-ALTER TABLE staff RENAME TO employees;
+SELECT column_name, data_type, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_schema = DATABASE()
+  AND table_name = 'employees';
 ```
 
-Table renames should be coordinated with applications, views, procedures, ETL jobs, and downstream dependencies.
+## 📑 13. CREATE TABLE LIKE
 
----
+Creates a structurally similar table:
 
-## 17. Add and Remove Constraints
+```sql
+CREATE TABLE employees_backup LIKE employees;
+```
 
-Structural changes can also modify constraints.
+It is useful when you need a similar table without copying the data. Verify the resulting structure for operational use.
+
+## 🔬 14. CREATE TABLE AS SELECT
+
+Creates a table from a query result:
+
+```sql
+CREATE TABLE high_value_customers AS
+SELECT customer_id, customer_name
+FROM customers
+WHERE lifetime_value > 100000;
+```
+
+CTAS is useful for derived datasets and staging work. Do not assume that it reproduces all source constraints and indexes.
+
+## 🧱 15. Temporary Tables
+
+```sql
+CREATE TEMPORARY TABLE active_customers AS
+SELECT *
+FROM customers
+WHERE status = 'ACTIVE';
+```
+
+Temporary tables are session-scoped and useful for intermediate transformations. They are not persistent pipeline storage.
+
+## 📌 16. Indexes in Table Design
+
+Indexes can be defined during creation:
+
+```sql
+CREATE TABLE orders (
+    order_id BIGINT PRIMARY KEY,
+    customer_id BIGINT,
+    order_date DATE,
+    INDEX idx_orders_customer (customer_id)
+);
+```
+
+Or added later:
+
+```sql
+ALTER TABLE orders
+ADD INDEX idx_orders_customer (customer_id);
+```
+
+Indexes can improve reads but consume storage and add write/maintenance overhead. Index based on actual query patterns.
+
+## 🔐 17. Constraints During CREATE vs ALTER
+
+Constraints can be created with the table or added later.
+
+```sql
+ALTER TABLE orders
+ADD CONSTRAINT fk_orders_customer
+FOREIGN KEY (customer_id)
+REFERENCES customers(customer_id);
+```
+
+Named constraints make migrations and troubleshooting easier.
+
+## 🧪 18. Safe Schema-Change Workflow
+
+```text
+Requirement
+    ↓
+Inspect current schema
+    ↓
+Profile existing data
+    ↓
+Check dependencies
+    ↓
+Test migration
+    ↓
+Apply change
+    ↓
+Validate schema + data
+    ↓
+Monitor downstream jobs
+```
+
+For example, before changing `INT` to `BIGINT`, check current values, dependent objects, indexes, constraints, applications, and future growth.
+
+## 🌎 19. Real-World Orders Table
+
+```sql
+CREATE TABLE orders (
+    order_id BIGINT PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    order_amount DECIMAL(12, 2) NOT NULL,
+    order_date DATE NOT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_orders_customer (customer_id),
+    INDEX idx_orders_date (order_date)
+);
+```
+
+The design communicates identifier size, monetary precision, required business fields, defaults, audit time, and expected lookup patterns.
+
+## 🏗️ 20. Data Engineering Use Cases
+
+Table creation and modification are used for:
+
+- Staging and ingestion targets.
+- Warehouse facts and dimensions.
+- Audit columns such as `created_at` and `updated_at`.
+- Source schema evolution.
+- Temporary transformation tables.
+- Derived datasets with CTAS.
+- Operational indexes.
+- Environment-to-environment migrations.
 
 Example:
 
 ```sql
-ALTER TABLE employees
-ADD CONSTRAINT uq_employee_email UNIQUE (email);
+ALTER TABLE staging_orders
+ADD COLUMN ingestion_ts DATETIME DEFAULT CURRENT_TIMESTAMP;
 ```
 
-A constraint can later be removed by its name:
+This separates pipeline ingestion time from business event time.
 
-```sql
-ALTER TABLE employees
-DROP INDEX uq_employee_email;
-```
+## ⚠️ 21. Common Mistakes
 
-Foreign-key constraint syntax is covered in the Constraints and Keys topic.
+- Changing a type without profiling existing data.
+- Dropping columns without checking dependencies.
+- Making every column `NOT NULL`.
+- Assuming CTAS copies all constraints and indexes.
+- Adding indexes without considering write cost.
+- Using vague column names.
+- Making breaking schema changes without coordinating consumers.
 
----
+## ⚡ 22. Performance Considerations
 
-## 18. Temporary vs Permanent Structure Changes
+Schema design affects performance before query tuning begins.
 
-`CREATE TABLE` creates a persistent table unless a temporary table is explicitly requested.
+- Appropriate types reduce storage and conversion overhead.
+- Primary keys and indexes support lookups and joins.
+- Excessive indexes increase write cost.
+- Wide rows can increase I/O.
+- Large text/blob values should be used deliberately.
+- Join columns should have compatible data types.
+- Schema changes on large production tables require operational planning.
 
-```sql
-CREATE TEMPORARY TABLE staging_employees (
-    employee_id INT,
-    employee_name VARCHAR(100)
-);
-```
-
-Temporary tables are session-scoped and are covered in greater detail later.
-
----
-
-## 19. Create a Table from a Query
-
-MySQL can create a table from a query result using `CREATE TABLE ... AS SELECT`.
-
-```sql
-CREATE TABLE employee_backup AS
-SELECT
-    employee_id,
-    employee_name,
-    salary
-FROM employees;
-```
-
-> [!IMPORTANT]
-> `CREATE TABLE ... AS SELECT` is useful for derived copies, but it should not be assumed to reproduce every original constraint, index, or table property.
-
----
-
-## 20. ALTER TABLE and Existing Data
-
-Structural changes can affect existing rows.
-
-For example, adding a nullable column is generally different from adding a `NOT NULL` column without a valid default.
-
-Before changing a production table, consider:
-
-1. Existing row count
-2. Existing values
-3. Nullability
-4. Default values
-5. Indexes and constraints
-6. Application dependencies
-7. Locking and execution impact
-8. Rollback or recovery strategy
-
----
-
-## 21. Safe Schema Evolution
-
-A practical migration workflow is:
-
-```text
-Understand change
-      ↓
-Check dependencies
-      ↓
-Check existing data
-      ↓
-Test on representative data
-      ↓
-Apply migration
-      ↓
-Verify structure
-      ↓
-Verify application / ETL behavior
-```
-
-For Data Engineering systems, schema changes should be treated as part of the data pipeline lifecycle rather than casual ad-hoc edits.
-
----
-
-## 22. Common Mistakes
-
-- Creating columns without choosing an appropriate data type
-- Assuming `CREATE TABLE IF NOT EXISTS` updates an existing table
-- Using `MODIFY COLUMN` when a rename is required
-- Forgetting the new definition when using `CHANGE COLUMN`
-- Dropping columns without checking dependencies
-- Adding `NOT NULL` without checking existing rows
-- Assuming `CREATE TABLE ... AS SELECT` copies all indexes and constraints
-- Making production DDL changes without testing
-- Ignoring downstream ETL and application dependencies
-- Treating column order as business logic
-
----
-
-## 23. Interview-Focused Questions
-
-Try to answer each question yourself before opening the answer.
+## 🎤 23. Interview-Focused Questions
 
 ### Q1. What is the difference between CREATE TABLE and ALTER TABLE?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`CREATE TABLE` creates a new table. `ALTER TABLE` changes the structure of an existing table, such as adding or modifying columns and constraints.
+`CREATE TABLE` creates a new table and its initial schema. `ALTER TABLE` changes an existing table, such as adding a column, modifying a type, or adding an index.
 
 </details>
 
----
-
-### Q2. What is the difference between MODIFY COLUMN and CHANGE COLUMN in MySQL?
+### Q2. What happens when you add a NOT NULL column to a populated table?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`MODIFY COLUMN` changes the definition of an existing column while keeping its name. `CHANGE COLUMN` can rename the column and requires the old and new names plus the full new definition.
+Existing rows need valid values. Without a compatible default or migration strategy, the operation may fail. A production change should be planned and tested.
 
 </details>
 
----
-
-### Q3. What is the difference between RENAME COLUMN and CHANGE COLUMN?
+### Q3. CREATE TABLE LIKE vs CREATE TABLE AS SELECT?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-`RENAME COLUMN` is intended specifically for renaming a column. `CHANGE COLUMN` can rename the column but also requires the new column definition.
+`LIKE` creates a structurally similar table. CTAS creates a table from query results. CTAS should not be assumed to reproduce all source constraints and indexes.
 
 </details>
 
----
-
-### Q4. What does CREATE TABLE IF NOT EXISTS do?
+### Q4. Why use SHOW CREATE TABLE before a migration?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-It prevents the normal error when the specified table already exists. It does not modify or synchronize the existing table definition.
+It exposes the actual current DDL, including columns, indexes, constraints, defaults, and options, reducing the risk of changing the schema based on assumptions.
 
 </details>
 
----
-
-### Q5. What happens when you drop a column?
+### Q5. DROP COLUMN vs DELETE?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-The column and its stored values are removed from the table. The operation can be destructive and may also affect indexes, constraints, queries, or applications that depend on the column.
+`DROP COLUMN` changes the schema by removing an attribute. `DELETE` removes rows while keeping the table structure.
 
 </details>
 
----
-
-### Q6. Why should you be careful when adding a NOT NULL column to an existing table?
+### Q6. Why can changing a data type be dangerous?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-Existing rows need a valid value for the new column. Depending on the definition and MySQL behavior, adding a non-nullable column without an appropriate default can fail or require a migration strategy that backfills existing records.
+Existing values may not fit the new type, causing conversion, truncation, or failure. The change can also affect indexes, applications, joins, and downstream consumers.
 
 </details>
 
----
-
-### Q7. Does CREATE TABLE AS SELECT copy all indexes and constraints from the source table?
+### Q7. When would you use a temporary table in Data Engineering?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-No. `CREATE TABLE ... AS SELECT` creates a table from the query result, but you should not assume that the source table's primary keys, indexes, foreign keys, and other properties are reproduced. Define required structural objects explicitly.
+For session-scoped intermediate transformations or complex calculations. It is not a substitute for persistent staging or warehouse storage.
 
 </details>
 
----
-
-### Q8. How would you safely rename a column used by an ETL pipeline?
+### Q8. Why consider indexes during table design?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-First identify downstream dependencies such as ETL queries, views, procedures, dashboards, and applications. Test the migration, coordinate the code change, rename the column, and verify all dependent workflows. In production, a compatibility or phased migration may be safer than an immediate breaking rename.
+Indexes can improve filtering, joins, and lookups, but consume storage and add write overhead. They should reflect actual access patterns.
 
 </details>
 
----
-
-### Q9. What should you check before running ALTER TABLE in production?
+### Q9. How would you safely rename a column used by ETL jobs?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-Check the table size, existing data, dependencies, indexes, constraints, expected execution impact, locking behavior, backup/recovery options, maintenance window, and whether the migration has been tested on representative data.
+Identify consumers, update or version them, test the migration, deploy in a controlled sequence, and validate downstream jobs. A direct rename can cause widespread failures.
 
 </details>
 
----
-
-### Q10. An interviewer asks: How would you add a salary column with a default of 0.00?
+### Q10. How would you add a required column to a large production table?
 
 <details>
 <summary><strong>Answer</strong></summary>
 
-```sql
-ALTER TABLE employees
-ADD COLUMN salary DECIMAL(12, 2) NOT NULL DEFAULT 0.00;
-```
-
-The exact definition should be based on the business requirement and existing data.
+A common safe pattern is to add it compatibly, populate existing rows, validate, update consumers, and then enforce the final constraint. The exact approach depends on table size, workload, MySQL version, and availability requirements.
 
 </details>
 
----
+### Q11. Why name constraints explicitly?
 
-## 24. Quick Revision
+<details>
+<summary><strong>Answer</strong></summary>
 
-| Operation | Syntax / Purpose |
+Explicit names make schema definitions easier to understand and make migrations, troubleshooting, and later constraint operations more predictable.
+
+</details>
+
+### Q12. What should you check before dropping a column?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+Check applications, ETL jobs, views, procedures, reports, indexes, constraints, dashboards, downstream systems, and historical/audit requirements.
+
+</details>
+
+### Q13. What is schema evolution?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+Schema evolution is the controlled process of changing data structures as source or business requirements change while maintaining data quality and consumer compatibility.
+
+</details>
+
+### Q14. Why is schema design important in Data Engineering?
+
+<details>
+<summary><strong>Answer</strong></summary>
+
+The target schema controls how data is stored and validated. Poor choices can cause type mismatches, failed loads, inaccurate calculations, inefficient queries, and downstream compatibility problems.
+
+</details>
+
+## 🔄 24. Quick Revision
+
+| Operation | Purpose |
 |---|---|
-| `CREATE TABLE` | Create a new table |
-| `IF NOT EXISTS` | Avoid error if table already exists |
+| `CREATE TABLE` | Create a table |
+| `IF NOT EXISTS` | Avoid error if table exists |
 | `DESCRIBE` | Inspect columns |
 | `SHOW CREATE TABLE` | Inspect complete table DDL |
 | `ADD COLUMN` | Add a column |
@@ -547,4 +504,4 @@ The exact definition should be based on the business requirement and existing da
 ## 📂 Files in This Topic
 
 - [`examples.sql`](./examples.sql) — worked examples for creating, inspecting, and altering tables
-- [`practice.sql`](./practice.sql) — hands-on table-definition and schema-migration exercises
+- [`practice.sql`](./practice.sql) — table-definition and schema-migration exercises
