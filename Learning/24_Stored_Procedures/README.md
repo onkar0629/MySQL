@@ -798,7 +798,7 @@ Look for a set-based statement that expresses the same transformation. Also insp
 | `COMMIT` | Makes transaction changes permanent |
 | `ROLLBACK` | Undoes transaction changes |
 | `DEFINER` | Routine executes with definer security context |
-| `INVOKER` | Routine executes with caller security context |
+| `INVOKER` | Routine executes with caller's privileges |
 | Idempotency | Safe/repeatable effect under retry |
 | Set-based SQL | Preferred for bulk transformations |
 
